@@ -1,0 +1,191 @@
+Goods Trick
+==========================
+canary size: 73728
+key gen stack usage: 73720
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 73984
+key gen stack usage: 73720
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 74240
+key gen stack usage: 73720
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 86784
+key gen stack usage: 86680
+encaps stack usage: 19516
+decaps stack usage: 23260
+OK KEYS
+
+canary size: 90368
+key gen stack usage: 90276
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 91136
+key gen stack usage: 90972
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 92160
+key gen stack usage: 92084
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 92416
+key gen stack usage: 92396
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 93952
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 94208
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 94464
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 94720
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 94976
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 95232
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 95488
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 95744
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 96000
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 96256
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 96512
+key gen stack usage: 93756
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+canary size: 103680
+key gen stack usage: 103676
+encaps stack usage: 19516
+decaps stack usage: 23148
+OK KEYS
+
+failed to measure stack usage.
+
+
+Mixed radix
+==========================
+canary size: 52736
+key gen stack usage: 52735
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 78848
+key gen stack usage: 78688
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 79104
+key gen stack usage: 78688
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 95488
+key gen stack usage: 95244
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 96000
+key gen stack usage: 95940
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 96256
+key gen stack usage: 95940
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 97536
+key gen stack usage: 97364
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 98816
+key gen stack usage: 98724
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 99072
+key gen stack usage: 98724
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+canary size: 99328
+key gen stack usage: 98724
+encaps stack usage: 13912
+decaps stack usage: 18872
+OK KEYS
+
+failed to measure stack usage.
+
+
+
