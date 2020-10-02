@@ -8,12 +8,12 @@ The most of the c codes in the repository are taken from PQM4 which is released 
 
 ## Authors
 * Erdem Alkim, Ondokuz Mayıs University (Samsun, Turkey) and Fraunhofer SIT (Darmstadt, Germany), 
-* Dean Yun-Li Cheng, Academia Sinica and National Taiwan University (Taipei, Taiwan) 
+* Dean Yun-Li Cheng, Academia Sinica and National Taiwan University (both Taipei, Taiwan) 
 * Chi-Ming Marvin Chung, Academia Sinica 
 * Hülya Evkan, Fraunhofer SIT
 * Leo Wei-Lun Huang, Academia Sinica 
-* Vincent Hwang, Academia Sinica and National Taiwan University (Taipei, Taiwan)  
-* Ching-Lin Trista Li, Academia Sinica and National Taiwan University (Taipei, Taiwan)
+* Vincent Hwang, Academia Sinica and National Taiwan University
+* Ching-Lin Trista Li, Academia Sinica and National Taiwan University
 * Ruben Niederhagen, University of Southern Denmark (Odense, Denmark) 
 * Cheng-Jhih Shih, Academia Sinica 
 * Julian Wälde, Fraunhofer SIT
