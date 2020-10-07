@@ -34,9 +34,11 @@ void ifft17_mr(void* fpad, void* h);
 void intt17_rader_mr(void* fpad, void* h);
 void mod_reduce(void* h, void* hpad);
 #elif defined(MIXED)
-#include "ntt.h"
+#include "ntt1620.h"
+#include "consts_asm_1620.h"
 #elif defined(GOODS)
-#include "NTT.h"
+#include "ntt1536.h"
+#include "consts_asm_1536.h"
 #endif
 
 #endif

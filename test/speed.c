@@ -99,12 +99,12 @@ int main(void)
 
   __asm_my_mul(&(Goodp0[1][0]), &(Goodp1[1][0]), Mprime, MOD);
 
-  __asm_NTT_inv_1_2_3(&(Goodp0[0][0]), t_inv_factor_1_2_3, Mprime, MOD);
-  __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), t_inv_factor_4_5_6_7_group_T, Mprime, MOD);
-  __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), t_inv_factor_7_8_9_7_group_T, Mprime, MOD);
+  __asm_NTT_inv_1_2_3(&(Goodp0[0][0]), inv_factor_1_2_3, Mprime, MOD);
+  __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), inv_factor_4_5_6, Mprime, MOD);
+  __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
   __asm_final_map_and_pack(h, R2invN, Goodp0[2], 
-                           Goodp0[0], O_M, O_M_bar, O_Mhalf,
+                           Goodp0[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
 #endif
   t1 = hal_get_time();
@@ -151,12 +151,12 @@ int main(void)
 #elif defined(MIXED)
   asm_invntt(g_modq,f_modq,invomegas_asm);
 #elif defined(GOODS)
-  __asm_NTT_inv_1_2_3(&(Goodp0[0][0]), t_inv_factor_1_2_3, Mprime, MOD);
-  __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), t_inv_factor_4_5_6_7_group_T, Mprime, MOD);
-  __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), t_inv_factor_7_8_9_7_group_T, Mprime, MOD);
+  __asm_NTT_inv_1_2_3(&(Goodp0[0][0]), inv_factor_1_2_3, Mprime, MOD);
+  __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), inv_factor_4_5_6, Mprime, MOD);
+  __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
   __asm_final_map_and_pack(h, R2invN, Goodp0[2], 
-                           Goodp0[0], O_M, O_M_bar, O_Mhalf,
+                           Goodp0[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
 #endif
   t1 = hal_get_time();

@@ -1,8 +1,8 @@
-#ifndef ntt_H
-#define ntt_H
+#ifndef NTT1620_H
+#define NTT1620_H
 #include "params.h"
 #include <stdint.h>
-#include "consts_asm.h"
+
 // Function definitions
 //
 void asm_basemul(int16_t *a, const int16_t *b, const int16_t* W); 

@@ -109,12 +109,12 @@ static void Rq_mult_small(Fq *h,const Fq *f,const small *g)
 
   __asm_my_mul(&(Goodp0[1][0]), &(Goodp1[1][0]), Mprime, MOD);
 
-  __asm_NTT_inv_1_2_3(&(Goodp0[0][0]), t_inv_factor_1_2_3, Mprime, MOD);
-  __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), t_inv_factor_4_5_6_7_group_T, Mprime, MOD);
-  __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), t_inv_factor_7_8_9_7_group_T, Mprime, MOD);
+  __asm_NTT_inv_1_2_3(&(Goodp0[0][0]), inv_factor_1_2_3, Mprime, MOD);
+  __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), inv_factor_4_5_6, Mprime, MOD);
+  __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
   __asm_final_map_and_pack(h, R2invN, Goodp0[2], 
-                           Goodp0[0], O_M, O_M_bar, O_Mhalf,
+                           Goodp0[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
 #endif
 }
@@ -333,19 +333,19 @@ static void Encrypt(Fq *B,int8 *T,const int8 *r,const Fq *G,const Fq *A,const sm
   __asm_my_mul(&(Goodp1[1][0]), &(Goodp0[1][0]), Mprime, MOD);
   __asm_my_mul(&(Goodp2[1][0]), &(Goodp0[1][0]), Mprime, MOD);
 
-  __asm_NTT_inv_1_2_3(&(Goodp1[0][0]), t_inv_factor_1_2_3, Mprime, MOD);
-  __asm_NTT_inv_4_5_6(&(Goodp1[0][0]), t_inv_factor_4_5_6_7_group_T, Mprime, MOD);
-  __asm_NTT_inv_7_8_9(&(Goodp1[0][0]), t_inv_factor_7_8_9_7_group_T, Mprime, MOD);
+  __asm_NTT_inv_1_2_3(&(Goodp1[0][0]), inv_factor_1_2_3, Mprime, MOD);
+  __asm_NTT_inv_4_5_6(&(Goodp1[0][0]), inv_factor_4_5_6, Mprime, MOD);
+  __asm_NTT_inv_7_8_9(&(Goodp1[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
-  __asm_NTT_inv_1_2_3(&(Goodp2[0][0]), t_inv_factor_1_2_3, Mprime, MOD);
-  __asm_NTT_inv_4_5_6(&(Goodp2[0][0]), t_inv_factor_4_5_6_7_group_T, Mprime, MOD);
-  __asm_NTT_inv_7_8_9(&(Goodp2[0][0]), t_inv_factor_7_8_9_7_group_T, Mprime, MOD);
+  __asm_NTT_inv_1_2_3(&(Goodp2[0][0]), inv_factor_1_2_3, Mprime, MOD);
+  __asm_NTT_inv_4_5_6(&(Goodp2[0][0]), inv_factor_4_5_6, Mprime, MOD);
+  __asm_NTT_inv_7_8_9(&(Goodp2[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
   __asm_final_map_and_pack(bG, R2invN, Goodp1[2], 
-                           Goodp1[0], O_M, O_M_bar, O_Mhalf,
+                           Goodp1[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
   __asm_final_map_and_pack(bA, R2invN, Goodp2[2], 
-                           Goodp2[0], O_M, O_M_bar, O_Mhalf,
+                           Goodp2[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
 #endif
 
