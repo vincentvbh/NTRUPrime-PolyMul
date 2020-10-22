@@ -3,8 +3,49 @@
 
 This repository contains ARM Cortex-M4 implementation of three polynomial multiplication for NTRU Prime, an alternate candidate for NIST post-quantum standardization project.
 
-## Licence
-The most of the c codes in the repository are taken from PQM4 which is released under CC0, the codes that have different licence (public domain or MIT) indicated in the top of the file if needed. All assembly files in this repository released under CC0.
+To perform polynomial multiplication in Z_{4591}/(X^{761}-X-1), the implementation uses of following ring operations:
+- Polynomial multiplication in Z_{6984193}/(X^{1536}-1) (\_\_asm\_my\_mul.S final\_map\_and\_pack.S NTT.S NTT\_inv.S)
+- Polynomial multiplication in Z_{4591}/(X^{1530}-1) (fft9.S ifft9.S byteToShort.S ntt17\_rader.S intt17\_rader\_mr.S polymul\_10x10\_153\_mr.S mod\_reduce.S)
+- Polynomial multiplication in Z_{4591}/(X^{1620}-1) (nttasm.S)
+
+Those polynomial multiplication implementations can be chosen at compile time with preprocessing macros GOODS, MIXED1, and MIXED, respectively. 
+
+## Setup
+The implementation targets STM32F4 Discovery board, and it uses following tools:
+- arm-none-eabi toolchain for compiling the code.
+- STLINK to flash binaries to the board.
+- libopencm3 for main library functions.
+- Python >= 3.6, and pyserial used to read output of tests and benchmarks.
+
+For convinience libopencm3 is compiled and relevant header files and the shared object placed in lib directory.
+
+To compile the codes, simply run make command in main directory. This command will generate all binaries for testing the software as well as benchmarking different implementations.
+
+Benchmarking binaries:
+- ntrulpr761\_gs\_speed.bin: GOODS macro activated NTRU Prime scheme
+- sntrup761\_gs\_speed.bin: GOODS macro activated Streamlined NTRU Prime scheme
+- ntrulpr761\_mr1\_speed.bin: MIXED1 macro activated NTRU Prime scheme
+- sntrup761\_mr1\_speed.bin: MIXED1 macro activated Streamlined NTRU Prime scheme
+- ntrulpr761\_mr\_speed.bin: MIXED macro activated NTRU Prime scheme
+- sntrup761\_mr\_speed.bin: MIXED macro activated Streamlined NTRU Prime scheme
+
+Stack usage measurements:
+- ntrulpr761\_gs\_stack.bin: GOODS macro activated NTRU Prime scheme
+- sntrup761\_gs\_stack.bin: GOODS macro activated Streamlined NTRU Prime scheme
+- ntrulpr761\_mr1\_stack.bin: MIXED1 macro activated NTRU Prime scheme
+- sntrup761\_mr1\_stack.bin: MIXED1 macro activated Streamlined NTRU Prime scheme
+- ntrulpr761\_mr\_stack.bin: MIXED macro activated NTRU Prime scheme
+- sntrup761\_mr\_stack.bin: MIXED macro activated Streamlined NTRU Prime scheme
+
+Testing binaries:
+- ntrulpr761\_gs\_test.bin: GOODS macro activated NTRU Prime scheme
+- sntrup761\_gs\_test.bin: GOODS macro activated Streamlined NTRU Prime scheme
+- ntrulpr761\_mr1\_test.bin: MIXED1 macro activated NTRU Prime scheme
+- sntrup761\_mr1\_test.bin: MIXED1 macro activated Streamlined NTRU Prime scheme
+- ntrulpr761\_mr\_test.bin: MIXED macro activated NTRU Prime scheme
+- sntrup761\_mr\_test.bin: MIXED macro activated Streamlined NTRU Prime scheme
+
+To load the binaries to the board and read the output, one can simply run make runXXX, where XXX can be Speed, Stack, Test or All for running all three of them.
 
 ## Authors
 * Erdem Alkim, Ondokuz Mayıs University (Samsun, Turkey) and Fraunhofer SIT (Darmstadt, Germany), 
