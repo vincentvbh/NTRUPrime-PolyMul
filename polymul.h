@@ -23,16 +23,16 @@ extern void Short_fromlist_asm(int8 *out,const uint32 *in);
 
 #if defined(MIXED1)
 #define PARAMS_M 1530
-void fft17(void*f, void* fpad);
-void ntt17_rader(void* f, void* fpad);
-void ntt17_rader_byte(void* g, void* gpad);
-void byteToShort(void* gg, void* g);
-void fft9(void* fpad);
-void polymul_10x10_153_mr(void* fpad, void* gpad);
-void ifft9(void* fpad);
-void ifft17_mr(void* fpad, void* h);
-void intt17_rader_mr(void* fpad, void* h);
-void mod_reduce(void* h, void* hpad);
+void fft17(int16*f, int16* fpad);
+void ntt17_rader(int16* f, int16* fpad);
+void ntt17_rader_byte(int8* g, int16* gpad);
+void byteToShort(int16* gg, int8* g);
+void fft9(int16* fpad);
+void polymul_10x10_153_mr(int16* fpad, int16* gpad);
+void ifft9(int16* fpad);
+void ifft17_mr(int16* fpad, int16* h);
+void intt17_rader_mr(int16* fpad, int16* h);
+void mod_reduce(int16* h, int16* hpad);
 #elif defined(MIXED)
 #include "ntt1620.h"
 #include "consts_asm_1620.h"
