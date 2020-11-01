@@ -9,14 +9,14 @@ buffer_bridge:
     .word buffer
 wpad:
     .word 935519
-    .word 40500057
-    .word 86900888
-    .word 61146163
-    .word 4158194321
-    .word 4266656860
-    .word 4269209693
-    .word 43779320
-    .word 74254574
+    .word 4254923258
+    .word 14808939
+    .word 4280221411
+    .word 4171694098
+    .word 4150000877
+    .word 44630214
+    .word 87754374
+    .word 4185720356
 
 .global intt17_rader_mr
 .type intt17_rader_mr, %function
@@ -392,7 +392,7 @@ intt17_rader_mr_body:
     smlad r12, r1, r7, r12
     smlad r12, r2, r6, r12
     smlad r12, r3, r5, r12 @ c6
-    vmov r1, s4
+    vmov r1, s4 @ qinv
     mov.w r2, #4591
     vmov r3, s15
     vmov r4, s16
@@ -420,6 +420,13 @@ intt17_rader_mr_body:
     pkhbt r12, r12, r4, lsl #16 @ c6c7
     vmov r3, s3 @ a0a1
     mov.w r4, #3459
+    smulbb r5, r4, r3
+    smulbt r6, r4, r3
+    smmulr r7, r5, r1
+    mls r5, r7, r2, r5
+    smmulr r7, r6, r1
+    mls r6, r7, r2, r6
+    pkhbt r3, r5, r6, lsl #16 @ a0a1 * 65536/153
     @ r1 = qinv, r2 = 4591, r3 = a0a1, r4 = 3459 for mr
     ldr.w r5, [lr, #32]
     ldr.w r6, [lr, #36]
@@ -449,20 +456,8 @@ intt17_rader_mr_body:
     ldr.w r8, [lr]
     @ free r10, r11, r12
     sadd16 r8, r8, r3 @ b1b2 : 1
-    smulbb r10, r4, r8 
-    smmulr r12, r10, r1
-    mls r10, r12, r2, r10
-    smulbb r11, r4, r0 
-    smmulr r12, r11, r1
-    mls r11, r12, r2, r11
-    pkhbt r10, r10, r11, lsl #16 @ d1
-    smulbt r8, r4, r8
-    smmulr r12, r8, r1
-    mls r8, r12, r2, r8
-    smulbt r0, r4, r0
-    smmulr r12, r0, r1
-    mls r0, r12, r2, r0
-    pkhbt r8, r8, r0, lsl #16 @ d2
+    pkhbt r10, r8, r0, lsl #16 @ d1
+    pkhtb r8, r0, r8, asr #16 @ d2
     @ free : r0, r11, r12
     vmov r0, s1
     str.w r10, [r0, #2520]
@@ -470,20 +465,8 @@ intt17_rader_mr_body:
     ldr.w r8, [lr, #4]
     @ free : r10, r11, r12
     sadd16 r8, r8, r3 @ b3b4 : 1
-    smulbb r10, r4, r8 
-    smmulr r12, r10, r1
-    mls r10, r12, r2, r10
-    smulbb r11, r4, r5 
-    smmulr r12, r11, r1
-    mls r11, r12, r2, r11
-    pkhbt r10, r10, r11, lsl #16 @ d3
-    smulbt r8, r4, r8
-    smmulr r12, r8, r1
-    mls r8, r12, r2, r8
-    smulbt r5, r4, r5
-    smmulr r12, r5, r1
-    mls r5, r12, r2, r5
-    pkhbt r8, r8, r5, lsl #16 @ d4
+    pkhbt r10, r8, r5, lsl #16 @ d3
+    pkhtb r8, r5, r8, asr #16 @ d4
     str.w r10, [r0, #1260]
     str.w r8, [r0, #720]
     @ free : r5, r8, r10, r11, r12
@@ -491,34 +474,10 @@ intt17_rader_mr_body:
     ldr.w r8, [lr, #12]
     sadd16 r5, r5, r3 @ b5b6 : 1
     sadd16 r8, r8, r3 @ b7b8 : 1
-    smulbb r10, r4, r5
-    smmulr r12, r10, r1
-    mls r10, r12, r2, r10
-    smulbb r11, r4, r6
-    smmulr r12, r11, r1
-    mls r11, r12, r2, r11
-    pkhbt r10, r10, r11, lsl #16 @ d5
-    smulbt r5, r4, r5
-    smmulr r12, r5, r1
-    mls r5, r12, r2, r5
-    smulbt r6, r4, r6
-    smmulr r12, r6, r1
-    mls r6, r12, r2, r6
-    pkhbt r5, r5, r6, lsl #16 @ d6
-    smulbb r6, r4, r8
-    smmulr r12, r6, r1
-    mls r6, r12, r2, r6
-    smulbb r11, r4, r7
-    smmulr r12, r11, r1
-    mls r11, r12, r2, r11
-    pkhbt r6, r6, r11, lsl #16 @ d7
-    smulbt r8, r4, r8
-    smmulr r12, r8, r1
-    mls r8, r12, r2, r8
-    smulbt r7, r4, r7
-    smmulr r12, r7, r1
-    mls r7, r12, r2, r7
-    pkhbt r8, r8, r7, lsl #16 @ d8
+    pkhbt r10, r5, r6, lsl #16 @ d5
+    pkhtb r5, r6, r5, asr #16 @ d6
+    pkhbt r6, r8, r7, lsl #16 @ d7
+    pkhtb r8, r7, r8, asr #16 @ d8
     str.w r10, [r0, #2160]
     str.w r5, [r0, #360]
     str.w r6, [r0, #1080]
@@ -533,35 +492,10 @@ intt17_rader_mr_body:
     sadd16 r6, r6, r3 @ b11b12 : 1
     sadd16 r7, r7, r3 @ b13b14 : 1
     sadd16 r8, r8, r3 @ b15b16 : 1
-    @ free : r3, r11, r12
-    smulbb r11, r4, r5
-    smmulr r3, r11, r1
-    mls r11, r3, r2, r11
-    smulbb r12, r4, r9
-    smmulr r3, r12, r1
-    mls r12, r3, r2, r12
-    pkhbt r11, r11, r12, lsl #16 @ d9
-    smulbt r5, r4, r5
-    smmulr r3, r5, r1
-    mls r5, r3, r2, r5
-    smulbt r9, r4, r9
-    smmulr r3, r9, r1
-    mls r9, r3, r2, r9
-    pkhbt r5, r5, r9, lsl #16 @ d10
-    smulbb r12, r4, r6
-    smmulr r3, r12, r1
-    mls r12, r3, r2, r12
-    smulbb r9, r4, r10
-    smmulr r3, r9, r1
-    mls r9, r3, r2, r9
-    pkhbt r12, r12, r9, lsl #16 @ d11
-    smulbt r6, r4, r6
-    smmulr r3, r6, r1
-    mls r6, r3, r2, r6
-    smulbt r10, r4, r10
-    smmulr r3, r10, r1
-    mls r10, r3, r2, r10
-    pkhbt r6, r6, r10, lsl #16 @ d12
+    pkhbt r11, r5, r9, lsl #16 @ d9
+    pkhtb r5, r9, r5, asr #16 @ d10
+    pkhbt r12, r6, r10, lsl #16 @ d11
+    pkhtb r6, r10, r6, asr #16 @ d12
     str.w r11, [r0, #540]
     str.w r5, [r0, #1620]
     str.w r12, [r0, #1800]
@@ -572,34 +506,10 @@ intt17_rader_mr_body:
     @ free : r3, r5, r6, r11, r12
     vmov r5, s13
     vmov r6, s14 @ r5 + r6 = b0b1
-    smulbb r11, r4, r7
-    smmulr r3, r11, r1
-    mls r11, r3, r2, r11
-    smulbb r12, r4, r9
-    smmulr r3, r12, r1
-    mls r12, r3, r2, r12
-    pkhbt r11, r11, r12, lsl #16 @ d13
-    smulbt r7, r4, r7
-    smmulr r3, r7, r1
-    mls r7, r3, r2, r7
-    smulbt r9, r4, r9
-    smmulr r3, r9, r1
-    mls r9, r3, r2, r9
-    pkhbt r7, r7, r9, lsl #16 @ d14
-    smulbb r12, r4, r8
-    smmulr r3, r12, r1
-    mls r12, r3, r2, r12
-    smulbb r9, r4, r10
-    smmulr r3, r9, r1
-    mls r9, r3, r2, r9
-    pkhbt r12, r12, r9, lsl #16 @ d15
-    smulbt r8, r4, r8
-    smmulr r3, r8, r1
-    mls r8, r3, r2, r8
-    smulbt r10, r4, r10
-    smmulr r3, r10, r1
-    mls r10, r3, r2, r10
-    pkhbt r8, r8, r10, lsl #16 @ d16
+    pkhbt r11, r7, r9, lsl #16 @ d13
+    pkhtb r7, r9, r7, asr #16 @ d14
+    pkhbt r12, r8, r10, lsl #16 @ d15
+    pkhtb r8, r10, r8, asr #16 @ d16
     @ free : r3, r9, r10 
     smulbb r3, r4, r5
     smlabb r3, r4, r6, r3
