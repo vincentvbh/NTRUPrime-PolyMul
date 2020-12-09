@@ -4,6 +4,19 @@
 #include <stdint.h>
 #include <string.h>
 
+#if defined(MIXED)
+#define TEST_q 4591
+#define TEST_n 1620
+#elif defined(MIXED1)
+#define TEST_q 4591
+#define TEST_n 1530
+#elif defined(GOODS)
+#define TEST_q 6984193
+#define TEST_n 1536
+#endif
+
+
+
 #define NTESTS 10
 
 
@@ -148,11 +161,21 @@ static int test_invalid_ciphertext(void)
 
 int main(void)
 {
-  int ret0,ret1,ret2;
   hal_setup(CLOCK_FAST);
 
   // marker for automated testing
   hal_send_str("==========================");
+
+  int ret0,ret1,ret2;
+  char out[64];
+  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE); 
+  hal_send_str(out);
+  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",TEST_q,TEST_n); 
+  hal_send_str(out);
+
+
+
+
   ret0 = test_keys();
   if (ret0&1)
     hal_send_str("ERROR KEYS\n");
@@ -168,7 +191,7 @@ int main(void)
     hal_send_str("ERROR invalid ciphertext\n");
 
   if (~(ret0|ret1|ret2))
-    hal_send_str("OK KEYS\n");
+    hal_send_str("SUCCESS\n");
   hal_send_str("#");
 
   while(1);
