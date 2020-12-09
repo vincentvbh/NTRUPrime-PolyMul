@@ -162,10 +162,7 @@ static int test_invalid_ciphertext(void)
 int main(void)
 {
   hal_setup(CLOCK_FAST);
-
-  // marker for automated testing
   hal_send_str("==========================");
-
   int ret0,ret1,ret2;
   char out[64];
   snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE); 
