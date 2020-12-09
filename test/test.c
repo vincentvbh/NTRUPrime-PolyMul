@@ -35,6 +35,7 @@ static int test_keys(void)
   unsigned char pk[CRYPTO_PUBLICKEYBYTES+16];
   unsigned char sendb[CRYPTO_CIPHERTEXTBYTES+16];
   unsigned char sk_a[CRYPTO_SECRETKEYBYTES+16];
+  int ret=0;
 
   write_canary(key_a); write_canary(key_a+sizeof(key_a)-8);
   write_canary(key_b); write_canary(key_b+sizeof(key_b)-8);
@@ -49,19 +50,19 @@ static int test_keys(void)
   {
     //Alice generates a public key
     crypto_kem_keypair(pk+8, sk_a+8);
-    hal_send_str("DONE key pair generation!");
+    //hal_send_str("DONE key pair generation!");
 
     //Bob derives a secret key and creates a response
     crypto_kem_enc(sendb+8, key_b+8, pk+8);
-    hal_send_str("DONE encapsulation!");
+    //hal_send_str("DONE encapsulation!");
 
     //Alice uses Bobs response to get her secret key
     crypto_kem_dec(key_a+8, sendb+8, sk_a+8);
-    hal_send_str("DONE decapsulation!");
+    //hal_send_str("DONE decapsulation!");
 
     if(memcmp(key_a+8, key_b+8, CRYPTO_BYTES))
     {
-      hal_send_str("ERROR KEYS\n");
+      ret |= 1;
     }
     else if(check_canary(key_a) || check_canary(key_a+sizeof(key_a)-8) ||
             check_canary(key_b) || check_canary(key_b+sizeof(key_b)-8) ||
@@ -69,15 +70,11 @@ static int test_keys(void)
             check_canary(sendb) || check_canary(sendb+sizeof(sendb)-8) ||
             check_canary(sk_a) || check_canary(sk_a+sizeof(sk_a)-8))
     {
-      hal_send_str("ERROR canary overwritten\n");
-    }
-    else
-    {
-      hal_send_str("OK KEYS\n");
+      ret |= 2;
     }
   }
 
-  return 0;
+  return ret;
 }
 
 
@@ -88,6 +85,7 @@ static int test_invalid_sk_a(void)
   unsigned char pk[CRYPTO_PUBLICKEYBYTES];
   unsigned char sendb[CRYPTO_CIPHERTEXTBYTES];
   int i;
+  int ret=0;
 
   for(i=0; i<NTESTS; i++)
   {
@@ -105,15 +103,11 @@ static int test_invalid_sk_a(void)
 
     if(!memcmp(key_a, key_b, CRYPTO_BYTES))
     {
-      hal_send_str("ERROR invalid sk_a\n");
-    }
-    else
-    {
-      hal_send_str("OK invalid sk_a\n");
+      ret |= 1;
     }
   }
 
-  return 0;
+  return ret;
 }
 
 
@@ -124,6 +118,7 @@ static int test_invalid_ciphertext(void)
   unsigned char pk[CRYPTO_PUBLICKEYBYTES];
   unsigned char sendb[CRYPTO_CIPHERTEXTBYTES];
   int i;
+  int ret=0;
   size_t pos;
 
   for(i=0; i<NTESTS; i++)
@@ -144,26 +139,36 @@ static int test_invalid_ciphertext(void)
 
     if(!memcmp(key_a, key_b, CRYPTO_BYTES))
     {
-      hal_send_str("ERROR invalid ciphertext\n");
-    }
-    else
-    {
-      hal_send_str("OK invalid ciphertext\n");
+      ret |= 1;
     }
   }
 
-  return 0;
+  return ret;
 }
 
 int main(void)
 {
+  int ret0,ret1,ret2;
   hal_setup(CLOCK_FAST);
 
   // marker for automated testing
   hal_send_str("==========================");
-  test_keys();
-  test_invalid_sk_a();
-  test_invalid_ciphertext();
+  ret0 = test_keys();
+  if (ret0&1)
+    hal_send_str("ERROR KEYS\n");
+  if (ret0&2)
+    hal_send_str("ERROR canary overwritten\n");
+
+  ret1 = test_invalid_sk_a();
+  if (ret1)
+    hal_send_str("ERROR invalid sk_a\n");
+  
+  ret2 = test_invalid_ciphertext();
+  if (ret2)
+    hal_send_str("ERROR invalid ciphertext\n");
+
+  if (~(ret0|ret1|ret2))
+    hal_send_str("OK KEYS\n");
   hal_send_str("#");
 
   while(1);
