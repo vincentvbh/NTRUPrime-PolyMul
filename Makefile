@@ -29,27 +29,38 @@ LDFLAGS    = --static -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group \
               -T$(LDSCRIPT) -nostartfiles -Wl,--gc-sections \
 	      $(ARCH_FLAGS) -Llib -lm -l$(OPENCM3NAME)
 
-COMMONPATH = common
+COMMONPATH = src/common
 BINPATH    = bin
 ELFPATH    = elf
 OBJPATH    = obj
-IMPLEMENTATION_PATH=.
+IMP_PATH   = src
+INV_PATH   = polyinv
+SORT_PATH  = intsort
 
-COMMONINCLUDES = -I$(COMMONPATH) -I$(IMPLEMENTATION_PATH)
+COMMON_SOURCES  = $(wildcard $(COMMONPATH)/*)
+INV_SOURCES = $(wildcard $(IMP_PATH)/$(INV_PATH)/*) 
+SORTING_SOURCES = $(addprefix $(IMP_PATH)/$(SORT_PATH)/,$(notdir int32_sort.c uint32_sort.c))
+KEMSOURCES  =  kem.c copy_p_F3_mod3.S Decode.c Decode_asm.S Encode.c Encode_asm.S Rq_mov.S Weightw_mask_asm.S sha512_constants.c sha512_hash.c sha512_inner32.s
+SOURCES = $(addprefix $(IMP_PATH)/,$(KEMSOURCES))
+SNTRUP_SOURCES = $(IMP_PATH)/Short_fromlist_asm_sntrup761.S
+NTRULPR_SOURCES = $(IMP_PATH)/Short_fromlist_asm_ntrulpr761.S
+PMUL_SOURCES =  $(addprefix $(IMP_PATH)/, Rq_mult3_asm.S Rq_redp.S)
+MIXEDRAD_SOURCES = $(wildcard $(IMP_PATH)/*1620*)
+MIXEDRAD1_SOURCES = $(wildcard $(IMP_PATH)/Rqmul_1530_*)
+GOODS_SOURCES = $(wildcard $(IMP_PATH)/Rqmul_gs_*)
 
-COMMONSOURCES          = $(COMMONPATH)/randombytes.c $(COMMONPATH)/fips202.c $(COMMONPATH)/keccakf1600.S $(COMMONPATH)/hal-stm32f4.c $(COMMONPATH)/aes.c $(COMMONPATH)/aes.S
-IMPLEMENTATION_HEADERS = $(IMPLEMENTATION_PATH)/*.h
-INVERSION_SOURCES = jump128divsteps.c jump1521divsteps.c jump16divsteps.c jump256divsteps.c jump32divsteps.c jump4divsteps.S jump512divsteps.c jump64divsteps.c jump753divsteps.c jump768divsteps.c jump8divsteps.c polyinverse4591761.c 
-INVERSION_SOURCES += jump128divsteps_mod3.c jump1521divsteps_mod3.c jump16divsteps_mod3.c jump256divsteps_mod3.c jump32divsteps_mod3.c jump512divsteps_mod3.c jump64divsteps_mod3.c jump753divsteps_mod3.c jump768divsteps_mod3.c jump8divsteps_mod3.S polyinverse761_mod3.c
-SORTING_SOURCES = int32_sort.c uint32_sort.c
-SOURCES = kem.c copy_p_F3_mod3.S Decode.c Decode_asm.S Encode.c Encode_asm.S Rq_mov.S Rq_mult3_asm.S Rq_redp.S Weightw_mask_asm.S sha512_constants.c sha512_hash.c sha512_inner32.s 
-SNTRUP_SOURCES = Short_fromlist_asm_sntrup761.S
-NTRULPR_SOURCES = Short_fromlist_asm_ntrulpr761.S
-PMUL_SOURCES = polymul_128x128.S polymul_16x16_nr.S polymul_192x192.S polymul_256x256.S polymul_256x512.c polymul_32x32.S  polymul_48x48.S polymul_64x64.S polymul_768x768.S polymul_8x8_nr.S polymul_4x4_nr7.S
-PMUL_SOURCES += polymul_128x128_mod3.S polymul_16x16_mod3.S polymul_256x256_mod3.S polymul_256x512_mod3.c polymul_32x32_mod3.S  polymul_64x64_mod3.S polymul_768x768_mod3.S polymul_8x8_mod3.S
-MIXEDRAD_SOURCES = nttasm.S
-MIXEDRAD1_SOURCES = fft9.S ifft9.S byteToShort.S ntt17_rader.S intt17_rader_mr.S polymul_10x10_153_mr.S mod_reduce.S
-GOODS_SOURCES = __asm_my_mul.S final_map_and_pack.S NTT.S NTT_inv.S
+
+COMMON_OBJS =  $(patsubst src/%, obj/%.o, $(COMMON_SOURCES))
+INV_OBJS =  $(patsubst src/%, obj/%.o, $(INV_SOURCES))
+SORTING_OBJS =  $(patsubst src/%, obj/%.o, $(SORTING_SOURCES))
+OBJS =  $(patsubst src/%, obj/%.o, $(SOURCES))
+SNTRUP_OBJS =  $(patsubst src/%, obj/%.o, $(SNTRUP_SOURCES))
+NTRULPR_OBJS =  $(patsubst src/%, obj/%.o, $(NTRULPR_SOURCES))
+PMUL_OBJS =  $(patsubst src/%, obj/%.o, $(PMUL_SOURCES))
+MIXEDRAD_OBJS =  $(patsubst src/%, obj/%.o, $(MIXEDRAD_SOURCES))
+MIXEDRAD1_OBJS =  $(patsubst src/%, obj/%.o, $(MIXEDRAD1_SOURCES))
+GOODS_OBJS =  $(patsubst src/%, obj/%.o, $(GOODS_SOURCES))
+
 
 .PHONY: clean all speed
 all: test speed stack
@@ -60,188 +71,119 @@ test: ntrulpr761_mr1_test.bin sntrup761_mr1_test.bin ntrulpr761_mr_test.bin sntr
 
 stack: ntrulpr761_mr1_stack.bin sntrup761_mr1_stack.bin ntrulpr761_mr_stack.bin sntrup761_mr_stack.bin ntrulpr761_gs_stack.bin sntrup761_gs_stack.bin 
 
-ntrulpr761_mr_speed.bin: ntrulpr761_mr_speed.elf
-	$(SIZE) ntrulpr761_mr_speed.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_mr_speed.elf ntrulpr761_mr_speed.bin
+%.bin: %.elf
+	$(SIZE) $<
+	$(OBJCOPY) -S -Obinary $< $@
 
-ntrulpr761_mr_speed.elf: test/speed.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_mr_speed.elf: test/speed.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DMIXED \
 	test/speed.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_mr_speed.bin: sntrup761_mr_speed.elf
-	$(SIZE) sntrup761_mr_speed.elf
-	$(OBJCOPY) -S -Obinary sntrup761_mr_speed.elf sntrup761_mr_speed.bin
-
-sntrup761_mr_speed.elf: test/speed.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_mr_speed.elf: test/speed.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DMIXED \
 	test/speed.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-ntrulpr761_mr1_speed.bin: ntrulpr761_mr1_speed.elf
-	$(SIZE) ntrulpr761_mr1_speed.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_mr1_speed.elf ntrulpr761_mr1_speed.bin
-
-ntrulpr761_mr1_speed.elf: test/speed.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_mr1_speed.elf: test/speed.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DMIXED1 \
 	test/speed.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_mr1_speed.bin: sntrup761_mr1_speed.elf
-	$(SIZE) sntrup761_mr1_speed.elf
-	$(OBJCOPY) -S -Obinary sntrup761_mr1_speed.elf sntrup761_mr1_speed.bin
-
-sntrup761_mr1_speed.elf: test/speed.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_mr1_speed.elf: test/speed.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DMIXED1 \
 	test/speed.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-ntrulpr761_gs_speed.bin: ntrulpr761_gs_speed.elf
-	$(SIZE) ntrulpr761_gs_speed.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_gs_speed.elf ntrulpr761_gs_speed.bin
-
-ntrulpr761_gs_speed.elf: test/speed.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_gs_speed.elf: test/speed.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DGOODS \
 	test/speed.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_gs_speed.bin: sntrup761_gs_speed.elf
-	$(SIZE) sntrup761_gs_speed.elf
-	$(OBJCOPY) -S -Obinary sntrup761_gs_speed.elf sntrup761_gs_speed.bin
-
-sntrup761_gs_speed.elf: test/speed.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_gs_speed.elf: test/speed.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DGOODS \
 	test/speed.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-ntrulpr761_mr_stack.bin: ntrulpr761_mr_stack.elf
-	$(SIZE) ntrulpr761_mr_stack.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_mr_stack.elf ntrulpr761_mr_stack.bin
-
-ntrulpr761_mr_stack.elf: test/stack.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_mr_stack.elf: test/stack.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DMIXED \
 	test/stack.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_mr_stack.bin: sntrup761_mr_stack.elf
-	$(SIZE) sntrup761_mr_stack.elf
-	$(OBJCOPY) -S -Obinary sntrup761_mr_stack.elf sntrup761_mr_stack.bin
-
-sntrup761_mr_stack.elf: test/stack.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_mr_stack.elf: test/stack.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DMIXED \
 	test/stack.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-ntrulpr761_mr1_stack.bin: ntrulpr761_mr1_stack.elf
-	$(SIZE) ntrulpr761_mr1_stack.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_mr1_stack.elf ntrulpr761_mr1_stack.bin
-
-ntrulpr761_mr1_stack.elf: test/stack.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_mr1_stack.elf: test/stack.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DMIXED1 \
 	test/stack.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_mr1_stack.bin: sntrup761_mr1_stack.elf
-	$(SIZE) sntrup761_mr1_stack.elf
-	$(OBJCOPY) -S -Obinary sntrup761_mr1_stack.elf sntrup761_mr1_stack.bin
-
-sntrup761_mr1_stack.elf: test/stack.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_mr1_stack.elf: test/stack.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DMIXED1 \
 	test/stack.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-
-ntrulpr761_gs_stack.bin: ntrulpr761_gs_stack.elf
-	$(SIZE) ntrulpr761_gs_stack.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_gs_stack.elf ntrulpr761_gs_stack.bin
-
-ntrulpr761_gs_stack.elf: test/stack.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_gs_stack.elf: test/stack.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DGOODS \
 	test/stack.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_gs_stack.bin: sntrup761_gs_stack.elf
-	$(SIZE) sntrup761_gs_stack.elf
-	$(OBJCOPY) -S -Obinary sntrup761_gs_stack.elf sntrup761_gs_stack.bin
-
-sntrup761_gs_stack.elf: test/stack.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_gs_stack.elf: test/stack.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DGOODS \
 	test/stack.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-ntrulpr761_mr_test.bin: ntrulpr761_mr_test.elf
-	$(SIZE) ntrulpr761_mr_test.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_mr_test.elf ntrulpr761_mr_test.bin
-
-ntrulpr761_mr_test.elf: test/test.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_mr_test.elf: test/test.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DMIXED \
 	test/test.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_mr_test.bin: sntrup761_mr_test.elf
-	$(SIZE) sntrup761_mr_test.elf
-	$(OBJCOPY) -S -Obinary sntrup761_mr_test.elf sntrup761_mr_test.bin
-
-sntrup761_mr_test.elf: test/test.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_mr_test.elf: test/test.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DMIXED \
 	test/test.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-ntrulpr761_mr1_test.bin: ntrulpr761_mr1_test.elf
-	$(SIZE) ntrulpr761_mr1_test.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_mr1_test.elf ntrulpr761_mr1_test.bin
-
-ntrulpr761_mr1_test.elf: test/test.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_mr1_test.elf: test/test.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DMIXED1 \
 	test/test.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_mr1_test.bin: sntrup761_mr1_test.elf
-	$(SIZE) sntrup761_mr1_test.elf
-	$(OBJCOPY) -S -Obinary sntrup761_mr1_test.elf sntrup761_mr1_test.bin
-
-sntrup761_mr1_test.elf: test/test.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_mr1_test.elf: test/test.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DMIXED1 \
 	test/test.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(MIXEDRAD1_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-ntrulpr761_gs_test.bin: ntrulpr761_gs_test.elf
-	$(SIZE) ntrulpr761_gs_test.elf
-	$(OBJCOPY) -S -Obinary ntrulpr761_gs_test.elf ntrulpr761_gs_test.bin
-
-ntrulpr761_gs_test.elf: test/test.c $(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+ntrulpr761_gs_test.elf: test/test.c $(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(LPR) -DGOODS \
 	test/test.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(NTRULPR_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
-sntrup761_gs_test.bin: sntrup761_gs_test.elf
-	$(SIZE) sntrup761_gs_test.elf
-	$(OBJCOPY) -S -Obinary sntrup761_gs_test.elf sntrup761_gs_test.bin
-
-sntrup761_gs_test.elf: test/test.c $(COMMONSOURCES) $(SOURCES) $(INVERSION_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(IMPLEMENTATION_HEADERS) $(OPENCM3FILE)
+sntrup761_gs_test.elf: test/test.c $(COMMON_SOURCES) $(SOURCES) $(INV_SOURCES) $(SORTING_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES)  $(OPENCM3FILE)
 	$(CC) -o $@ $(CFLAGS) $(SNTRUP) -DGOODS \
 	test/test.c \
-	$(COMMONSOURCES) $(SOURCES) $(SORTING_SOURCES) $(INVERSION_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
+	$(COMMON_SOURCES) $(SOURCES) $(SORTING_SOURCES) $(INV_SOURCES) $(SNTRUP_SOURCES) $(PMUL_SOURCES) $(GOODS_SOURCES) $(COMMONINCLUDES) $(LDFLAGS)
 
 
-$(OBJPATH)/%.o: $(IMPLEMENTATION_PATH)/%.c $(IMPLEMENTATION_HEADERS)
+%.o: %.c 
 	$(MKDIR) $(OBJPATH)
-	$(CC) -o $@ -c $(CFLAGS) -I$(IMPLEMENTATION_PATH) $(COMMONINCLUDES) $<
+	$(CC) -o $@ -c $(CFLAGS) $(COMMONINCLUDES) $<
 
-$(OBJPATH)/%.o: $(IMPLEMENTATION_PATH)/%.S $(IMPLEMENTATION_HEADERS)
+%.o: %.S 
 	$(MKDIR) $(OBJPATH)
-	$(CC) -o $@ -c $(CFLAGS) -I$(IMPLEMENTATION_PATH) $(COMMONINCLUDES) $<
+	$(CC) -o $@ -c $(CFLAGS) $(COMMONINCLUDES) $<
 
 
 runAll:	runSpeed runStack runTest
 
 runSpeed:
-	python3 read_guest.py ntrulpr761_mr_speed.bin 
-	python3 read_guest.py sntrup761_mr_speed.bin 
-	python3 read_guest.py ntrulpr761_mr1_speed.bin 
-	python3 read_guest.py sntrup761_mr1_speed.bin 
-	python3 read_guest.py ntrulpr761_gs_speed.bin  
-	python3 read_guest.py sntrup761_gs_speed.bin
+	./test/monitor.sh -b=ntrulpr761_mr_speed.bin 
+	#python3 read_guest.py sntrup761_mr_speed.bin 
+	#python3 read_guest.py ntrulpr761_mr1_speed.bin 
+	#python3 read_guest.py sntrup761_mr1_speed.bin 
+	#python3 read_guest.py ntrulpr761_gs_speed.bin  
+	#python3 read_guest.py sntrup761_gs_speed.bin
 
 runTest:
 	python3 read_guest.py ntrulpr761_mr_test.bin 

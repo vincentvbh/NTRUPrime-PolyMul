@@ -1,3 +1,10 @@
+/*
+ * Decode functions for NTRU Prime submission
+ * taken from pqm4 library.
+ */
+
+
+
 #include "int16.h"
 #include "int32.h"
 #include "uint16.h"
@@ -5,12 +12,23 @@
 #include "uint64.h"
 #include "Decode.h"
 #include "cmsis.h"
+
+/*
+ * Function prototypes from Decode_asm.S
+ */
 extern void Decode_Rq_asm(int16 *R,const unsigned char *s);
 extern void Decode_Rounded_asm(int16 *R,const unsigned char *s);
 
+/*
+ * 16-bit integer multiplication
+ */
 static int16 mullo(int16 x,int16 y) { return x*y; }
-//static int16 mulhi(int16 x,int16 y) { return (x*(int32)y) >> 16; }
 
+
+/*
+ * Decode function for NTRU LPR
+ * inputs:
+ */  
 extern void Decode_Rq(int16 *R,const unsigned char *s)
 {
   // int16 *R = v;

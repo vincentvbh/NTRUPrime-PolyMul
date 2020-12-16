@@ -1,0 +1,7 @@
+st-flash 1.5.1
+2020-12-17T02:00:32 INFO common.c: Loading device parameters....
+2020-12-17T02:00:32 INFO common.c: Device connected is: F4 device, id 0x10016413
+2020-12-17T02:00:32 INFO common.c: SRAM size: 0x30000 bytes (192 KiB), Flash: 0x100000 bytes (1024 KiB) in pages of 16384 bytes
+open(ntrulpr761_mr_speed.bin) == -1
+2020-12-17T02:00:32 ERROR common.c: map_file() == -1
+stlink_fwrite_flash() == -1
