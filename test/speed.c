@@ -5,7 +5,16 @@
 #include "polymul.h"
 #include "arith.h"
 
-
+#if defined(MIXED)
+#define SPEED_q 4591
+#define SPEED_n 1620
+#elif defined(MIXED1)
+#define SPEED_q 4591
+#define SPEED_n 1530
+#elif defined(GOODS)
+#define SPEED_q 6984193
+#define SPEED_n 1536
+#endif
 
 #include <stdio.h>
 #include <stdint.h>
@@ -55,7 +64,11 @@ int main(void)
   hal_setup(CLOCK_BENCHMARK);
 
   hal_send_str("==========================");
-
+  char out[64];
+  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE); 
+  hal_send_str(out);
+  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",SPEED_q,SPEED_n); 
+  hal_send_str(out);
   // Key-pair generation
   t0 = hal_get_time();
   crypto_kem_keypair(pk, sk);
@@ -166,7 +179,7 @@ int main(void)
     hal_send_rstr("ERROR KEYS\n");
   }
   else {
-    hal_send_rstr("OK KEYS\n");
+    hal_send_rstr("SUCCESS\n");
   }
 
 

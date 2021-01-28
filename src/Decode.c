@@ -25,10 +25,15 @@ extern void Decode_Rounded_asm(int16 *R,const unsigned char *s);
 static int16 mullo(int16 x,int16 y) { return x*y; }
 
 
-/*
- * Decode function for NTRU LPR
- * inputs:
- */  
+/*************************************************
+* Name:        Decode_Rq
+*
+* Description: De-serialization of a polynomial for Streamlined NTRU Prime
+*
+* Arguments:   
+* int16 *R              : pointer to the output public-key polynomial in R_q
+* const unsigned char *s: pointer to the input serialized public key
+**************************************************/
 extern void Decode_Rq(int16 *R,const unsigned char *s)
 {
   // int16 *R = v;
@@ -256,12 +261,18 @@ extern void Decode_Rq(int16 *R,const unsigned char *s)
   }
 
   Decode_Rq_asm(R + 46, s - 2);
-  /* reconstruct mod 95*[644]+[4591] */
-  /* reconstruct mod 190*[406]+[4591] */
-  /* reconstruct mod 380*[322]+[4591] */
-  /* reconstruct mod 761*[4591] */
 }
 
+/*************************************************
+* Name:        Decode_Rounded
+*
+* Description: De-serialization and subsequent uncompression of a polynomial used in
+*              both Streamlined NTRU Prime and NTRU LPRime
+*
+* Arguments:   
+* int16 *R              : pointer to the output public-key polynomial in R_q
+* const unsigned char *s: pointer to the input serialized public key
+**************************************************/
 void Decode_Rounded(int16 *R,const unsigned char *s)
 {
   long long i;
@@ -355,11 +366,4 @@ void Decode_Rounded(int16 *R,const unsigned char *s)
   }
 
   Decode_Rounded_asm(R + 4, s - 4);
-  /* reconstruct mod 11*[9097]+[2188] */
-  /* reconstruct mod 23*[1526]+[367] */
-  /* reconstruct mod 47*[625]+[150] */
-  /* reconstruct mod 95*[6400]+[1531] */
-  /* reconstruct mod 190*[1280]+[1531] */
-  /* reconstruct mod 380*[9157]+[1531] */
-  /* reconstruct mod 761*[1531] */
 }

@@ -3,6 +3,18 @@
 #include "hal.h"
 #include "sendfn.h"
 
+#if defined(MIXED)
+#define STACK_q 4591
+#define STACK_n 1620
+#elif defined(MIXED1)
+#define STACK_q 4591
+#define STACK_n 1530
+#elif defined(GOODS)
+#define STACK_q 6984193
+#define STACK_n 1536
+#endif
+
+
 #include <string.h>
 
 #define MAX_SIZE 0x1A000
@@ -63,7 +75,7 @@ static int test_keys(void) {
     send_stack_usage("key gen stack usage: ", stack_key_gen);
     send_stack_usage("encaps stack usage: ", stack_encaps);
     send_stack_usage("decaps stack usage: ", stack_decaps);
-    hal_send_str("OK KEYS\n");
+    hal_send_str("SUCCESS\n");
     return 0;
   }
 }
@@ -73,6 +85,12 @@ int main(void) {
 
   // marker for automated benchmarks
   hal_send_str("==========================");
+  char out[64];
+  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE); 
+  hal_send_str(out);
+  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",STACK_q,STACK_n); 
+  hal_send_str(out);
+  
   canary_size = 0x1000;
   while(test_keys()){
     canary_size += 0x100;

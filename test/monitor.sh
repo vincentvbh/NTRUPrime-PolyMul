@@ -35,15 +35,15 @@ fi
   
 DEVICE=${DEVICE:=$(ls /dev/ttyUSB*)}
 stty -F $DEVICE raw icanon eof \^d 115200
-st-flash --reset write $BIN 0x8000000 > flashing.log 2>&1
-grep "jolly good" flashing.log > /dev/null
+st-flash --reset write $BIN 0x8000000 > obj/flashing.log 2>&1
+grep "jolly good" obj/flashing.log > /dev/null
 
 if [ $? -ne 0 ];
 then
-  echo "Please check flashing.log"
+  echo "Please check obj/flashing.log"
   exit
 fi
 
 sed '/#/q' < $DEVICE >/dev/null 2>&1 #dummy read to avoid incomplete outputs
 st-flash reset >> /dev/null 2>&1 
-sed '/#/q' < $DEVICE
+sed '/#/q' < $DEVICE |tee $BIN.log

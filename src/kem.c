@@ -6,25 +6,28 @@
 #endif
 
 
-#include "int8.h"
-#include "int16.h"
-#include "int32.h"
-#include "uint16.h"
-#include "uint32.h"
 #include "Encode.h"
 #include "Decode.h"
 #include <string.h>
 #include "cmsis.h"
-
-#include "polymul.h"
-
-
+#include "Rq_mult.h"
 
 /* ----- masks */
 
+#define q12 ((q-1)/2)
+
+#include "arith.h"
+
 #ifdef LPR 
 
-/* return -1 if x<0; otherwise return 0 */
+/*************************************************
+* Name:        int16_negative_mask
+*
+* Description: Returns -1 if is input is negative integer, 0 otherwise.
+*
+* Argument:   
+* int16 x : input coefficient
+**************************************************/
 static int int16_negative_mask(int16 x)
 {
   uint16 u = x;
@@ -33,24 +36,32 @@ static int int16_negative_mask(int16 x)
   /* alternative with gcc -fwrapv: */
   /* x>>15 compiles to CPU's arithmetic right shift */
 }
-#endif
-typedef int8 small;
-#define q12 ((q-1)/2)
-typedef int16 Fq;
-
-#include "arith.h"
-
 
 /* ----- Top and Right */
 
-#ifdef LPR
 #define tau 16
-
+/*************************************************
+* Name:        Top
+*
+* Description: Rounds ((tau_1 * (C+tau_0)) div 2^15) to the closer integer.
+*
+* Arguments:   
+* Fq C     : input coefficient
+* 
+**************************************************/
 static int8 Top(Fq C)
 {
   return (tau1*(int32)(C+tau0)+16384)>>15;
 }
 
+/*************************************************
+* Name:        Right
+*
+* Description: Computes (tau_3*T-tau_3) mod q.
+*
+* Arguments:   
+* int8 T   : input coefficient
+**************************************************/
 static Fq Right(int8 T)
 {
   return Fq_freeze(tau3*(int32)T-tau2);
@@ -61,7 +72,17 @@ static Fq Right(int8 T)
 
 #ifndef LPR
 
-/* h = f*g in the ring R3 */
+/*************************************************
+* Name:        R3_mult
+*
+* Description: Computes polynomial multiplication in Z_3/(X^p-X-1) 
+*              with Toom-Cook based implementation. 
+*
+* Arguments:   
+* small *R       : pointer to the output polynomial in R_3
+* const small *f : pointer to the input polynomial in R_3
+* const small *g : pointer to the input polynomial in R_3
+**************************************************/
 static void R3_mult(small *h,const small *f,const small *g)
 {
   small fg[1536];
@@ -73,54 +94,17 @@ static void R3_mult(small *h,const small *f,const small *g)
 
 }
 
-#endif
 
-
-
-/* h = f*g in the ring Rq */
-static void Rq_mult_small(Fq *h,const Fq *f,const small *g)
-{
-#if defined(MIXED1)
-  int16_t g_modq[1530], fg[1530];
-  byteToShort(h, g);
-  ntt17_rader(h, g_modq);
-  fft9(g_modq);
-  ntt17_rader(f, fg);
-  fft9(fg);
-  polymul_10x10_153_mr(fg, g_modq);
-  ifft9(fg);
-  intt17_rader_mr(fg, g_modq);
-  mod_reduce(h, g_modq);
-
-#elif  defined(MIXED)
-  Fq fg[PARAMS_M],g_modq[PARAMS_M];
-
-  asm_ntt1s(g_modq,g,omegas_asm);
-  asm_ntt(fg,f,omegas_asm);
-  
-  asm_basemul(fg,g_modq,bromegas_asm);
-  asm_invntt(h,fg,invomegas_asm);
-
-#elif defined(GOODS)
-  int Goodp0[3][N], Goodp1[3][N];
-
-  NTT_forward_8(g, root_table, MOD, Mprime, &(Goodp0[0][0]));
-  NTT_forward_16(f, root_table, MOD, Mprime, &(Goodp1[0][0]));
-
-  __asm_my_mul(&(Goodp0[1][0]), &(Goodp1[1][0]), Mprime, MOD);
-
-  __asm_NTT_inv_1_2_3(&(Goodp0[0][0]), inv_factor_1_2_3, Mprime, MOD);
-  __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), inv_factor_4_5_6, Mprime, MOD);
-  __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), inv_factor_7_8_9, Mprime, MOD);
-
-  __asm_final_map_and_pack(h, R2invN, Goodp0[2], 
-                           Goodp0[0], O_M, O_M_bar, Mhalf,
-                           Mprime, MOD);
-#endif
-}
-
-#ifndef LPR
-/* R3_fromR(R_fromRq(r)) */
+/*************************************************
+* Name:        R3_fromRq
+*
+* Description: Returns a polynomial that i-th coefficient
+*              computed as (r[i] mod q) mod 3.
+*
+* Arguments:   
+* small *out  : pointer to the output polynomial in R_3
+* const Fq *r : pointer to the input polynomial in R_q
+**************************************************/
 static void R3_fromRq(small *out,const Fq *r)
 {
 
@@ -128,7 +112,15 @@ static void R3_fromRq(small *out,const Fq *r)
   for (i = 0;i < p;++i) out[i] = F3_freeze_short(r[i]);
 }
 
-/* h = 3f in Rq */
+/*************************************************
+* Name:        Rq_mult3
+*
+* Description: Computes h = 3*f mod R_q.
+*
+* Arguments:   
+* Fq *h       : pointer to the output polynomial in R_q
+* const Fq *f : pointer to the input polynomial in R_q
+**************************************************/
 static void Rq_mult3(Fq *h,const Fq *f)
 {
   Rq_mult3_asm(h, f);
@@ -137,7 +129,15 @@ static void Rq_mult3(Fq *h,const Fq *f)
 #endif
 
 /* ----- rounded polynomials mod q */
-
+/*************************************************
+* Name:        Round
+*
+* Description: 
+*
+* Arguments:   
+* Fq *out     : pointer to the output polynomial in R_q
+* const Fq *a : pointer to the input polynomial in R_q
+**************************************************/
 static void Round(Fq *out,const Fq *a)
 {
   int i;
@@ -154,7 +154,15 @@ static void Round(Fq *out,const Fq *a)
 }
 
 /* ----- sorting to generate short polynomial */
-
+/*************************************************
+* Name:        Short_fromlist
+*
+* Description: 
+*
+* Arguments:   
+* small *out      : pointer to the output polynomial in R_q
+* const uint32 *in: pointer to the input serialized public key
+**************************************************/
 static void Short_fromlist(small *out,const uint32 *in)
 {
   Short_fromlist_asm(out, in);
@@ -164,7 +172,17 @@ static void Short_fromlist(small *out,const uint32 *in)
 
 #define Hash_bytes 32
 
-/* e.g., b = 0 means out = Hash0(in) */
+/*************************************************
+* Name:        Hash
+*
+* Description: Domain separeted hash function that computes out=H_b(in)
+*
+* Arguments:   
+* unsigned char *out      : pointer to the output bitstring
+* int b                   : Domain separetor
+* const unsigned char *in : The input bitstring
+* int inlen               : The lenght of the input bitstring
+**************************************************/
 static void Hash(unsigned char *out,int b,const unsigned char *in,int inlen)
 {
   unsigned char x[inlen+1];
@@ -179,7 +197,17 @@ static void Hash(unsigned char *out,int b,const unsigned char *in,int inlen)
   //sha512_hash(out,x,inlen+1);
 }
 
-/* ----- higher-level randomness */
+/*************************************************
+* Name:        Short_random
+*
+* Description: Generate random sparse polynomial with coefficients are in {-1,0,1} 
+*              and weight is w. It generates unsigned 32-bit integer array, uses the 
+*              least significant two bits to indicate {-1,0,1}, then uses djbsort 
+*              to shuffle the array and maps values to {-1,0,1}.
+*
+* Arguments:   
+* small *out : pointer to the output polynomial with coefficients in {-1,0,1}
+**************************************************/
 static void Short_random(small *out)
 {
   uint32 L[p];
@@ -188,6 +216,12 @@ static void Short_random(small *out)
 }
 
 #ifndef LPR
+/*************************************************
+* Name:        urandom32
+*
+* Description: Return random 32-bit unsigned integer
+*
+**************************************************/
 static uint32 urandom32(void)
 {
   unsigned char c[4];
@@ -196,6 +230,14 @@ static uint32 urandom32(void)
 
   return *((int *)c);
 }
+/*************************************************
+* Name:        Small_random
+*
+* Description: Generate uniformly random polynomial that coefficients are in {-1,0,1}
+*
+* Arguments:   
+* small *out : pointer to the output polynomial in R_q
+**************************************************/
 static void Small_random(small *out)
 {
   int i;
@@ -221,13 +263,19 @@ static void Small_random(small *out)
   *out = x0;
 }
 
-#endif
-
 /* ----- Streamlined NTRU Prime Core */
 
-#ifndef LPR
-
-/* h,(f,ginv) = KeyGen() */
+/*************************************************
+* Name:        KeyGen
+*
+* Description: Generate f and g polynomials and compute h=f^{-1}*g mod R_q 
+*              and g^{-1} mod R_3
+*
+* Arguments:   
+* Fq *h       : pointer to the output public-key polynomial h
+* small *f    : pointer to the output secret-key polynomial f 
+* small *ginv : pointer to the output secret-key polynomial ginv 
+**************************************************/
 static void KeyGen(Fq *h,small *f,small *ginv)
 {
   small g[p];
@@ -241,7 +289,17 @@ static void KeyGen(Fq *h,small *f,small *ginv)
   Rq_mult_small(h,finv,g);
 }
 
-/* c = Encrypt(r,h) */
+/*************************************************
+* Name:        Encrypt
+*
+* Description: Encrypt small polynomial r with the public-key h return
+*              the ciphertext c
+*
+* Arguments:   
+* Fq *c          : pointer to the output ciphertext polynomial 
+* const small *r : pointer to the input polynomial r
+* const Fq *h    : pointer to the public-key
+**************************************************/
 static void Encrypt(Fq *c,const small *r,const Fq *h)
 {
   Fq hr[p];
@@ -249,7 +307,17 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
   Round(c,hr);
 }
 
-/* r = Decrypt(c,(f,ginv)) */
+/*************************************************
+* Name:        Decrypt
+*
+* Description: Decrypt the ciphertext c with using the secret-key f and ginv
+*
+* Arguments:   
+* small *r          : pointer to the output decrypted polynomial 
+* const Fq *c       : pointer to the input ciphertext
+* const small *f    : pointer to the input polynomial which is a part of the secret-key
+* const small *ginv : pointer to the input polinomial which is a part of the secret-key
+**************************************************/
 static void Decrypt(small *r,const Fq *c,const small *f,const small *ginv)
 {
   Fq cf[p];
@@ -275,7 +343,16 @@ static void Decrypt(small *r,const Fq *c,const small *f,const small *ginv)
 
 #ifdef LPR
 
-/* (G,A),a = KeyGen(G); leaves G unchanged */
+/*************************************************
+* Name:        Keygen
+*
+* Description: Generates the public-key A and the secret-key a
+*
+* Arguments:   
+* Fq *A       : pointer to the output polynomial which is a part of the public-key
+* small *a    : pointer to the output secret-key polynomial
+* const Fq *G : pointer to the input polynomial which is a part of the public-key
+**************************************************/
 static void KeyGen(Fq *A,small *a,const Fq *G)
 {
   Fq aG[p];
@@ -286,74 +363,41 @@ static void KeyGen(Fq *A,small *a,const Fq *G)
   Round(A,aG);
 }
 
-/* B,T = Encrypt(r,(G,A),b) */
+/*************************************************
+* Name:        Encrypt
+*
+* Description: Encrpts the polynomial r compute the ciphertext as B and T
+*
+* Arguments:   
+* Fq *B          : pointer to the output polynomial
+* int8 *T        : pointer to the output top bits of message encoded polynomial
+* const int8 *r  : pointer to the input bitstring
+* const Fq *G    : pointer to the input polynomial (public-key)
+* const Fq *A    : pointer to the input polynomial (public-key)
+* const small *b : pointer to the input polynomial
+**************************************************/
 static void Encrypt(Fq *B,int8 *T,const int8 *r,const Fq *G,const Fq *A,const small *b)
 {
   Fq bG[p];
   Fq bA[p];
   int i;
-#if defined(MIXED1)
-  int16_t b_modq[1530], G_modq[1530], A_modq[1530];
-  byteToShort(bG, b);
-  ntt17_rader(bG, b_modq);
-  fft9(b_modq);
-  ntt17_rader(G, G_modq);
-  fft9(G_modq);
-  ntt17_rader(A, A_modq);
-  fft9(A_modq);
-  polymul_10x10_153_mr(G_modq, b_modq);
-  polymul_10x10_153_mr(A_modq, b_modq);
-  ifft9(G_modq);
-  intt17_rader_mr(G_modq, b_modq);
-  mod_reduce(bG, b_modq);
-  ifft9(A_modq);
-  intt17_rader_mr(A_modq, b_modq);
-  mod_reduce(bA, b_modq);
 
-#elif defined(MIXED)
-  Fq b_modq[PARAMS_M],G_modq[PARAMS_M],A_modq[PARAMS_M];
-  
-  asm_ntt1s(b_modq,b,omegas_asm);
-  asm_ntt(G_modq,G,omegas_asm);
-  asm_ntt(A_modq,A,omegas_asm);
-  asm_basemul(G_modq,b_modq,bromegas_asm);
-  asm_basemul(A_modq,b_modq,bromegas_asm);
-  asm_invntt(bG,G_modq,invomegas_asm);
-  asm_invntt(bA,A_modq,invomegas_asm);
-
-#elif defined(GOODS)
-  // reuse NTT'd small part
-
-  int Goodp0[3][N], Goodp1[3][N], Goodp2[3][N];
-
-  NTT_forward_8(b, root_table, MOD, Mprime, &(Goodp0[0][0]));
-  NTT_forward_16(G, root_table, MOD, Mprime, &(Goodp1[0][0]));
-  NTT_forward_16(A, root_table, MOD, Mprime, &(Goodp2[0][0]));
-
-  __asm_my_mul(&(Goodp1[1][0]), &(Goodp0[1][0]), Mprime, MOD);
-  __asm_my_mul(&(Goodp2[1][0]), &(Goodp0[1][0]), Mprime, MOD);
-
-  __asm_NTT_inv_1_2_3(&(Goodp1[0][0]), inv_factor_1_2_3, Mprime, MOD);
-  __asm_NTT_inv_4_5_6(&(Goodp1[0][0]), inv_factor_4_5_6, Mprime, MOD);
-  __asm_NTT_inv_7_8_9(&(Goodp1[0][0]), inv_factor_7_8_9, Mprime, MOD);
-
-  __asm_NTT_inv_1_2_3(&(Goodp2[0][0]), inv_factor_1_2_3, Mprime, MOD);
-  __asm_NTT_inv_4_5_6(&(Goodp2[0][0]), inv_factor_4_5_6, Mprime, MOD);
-  __asm_NTT_inv_7_8_9(&(Goodp2[0][0]), inv_factor_7_8_9, Mprime, MOD);
-
-  __asm_final_map_and_pack(bG, R2invN, Goodp1[2], 
-                           Goodp1[0], O_M, O_M_bar, Mhalf,
-                           Mprime, MOD);
-  __asm_final_map_and_pack(bA, R2invN, Goodp2[2], 
-                           Goodp2[0], O_M, O_M_bar, Mhalf,
-                           Mprime, MOD);
-#endif
-
+  Rq_mult_twice(bG, bA, G, A, b); 
   Round(B,bG); 
   for (i = 0;i < I;++i) T[i] = Top(Fq_freeze(bA[i]+r[i]*q12));
 }
 
-/* r = Decrypt((B,T),a) */
+/*************************************************
+* Name:        Decrypt
+*
+* Description: Decrypt ciphertext in B and T with using the secret-key a
+*
+* Arguments:   
+* int8 *r        : pointer to the output plaintext
+* const Fq *B    : pointer to the input polynomial as part of ciphertext
+* const int8 *T  : pointer to the input top bits of message encoded polynomial
+* const small *a : pointer to the input secret-key polynomial
+**************************************************/
 static void Decrypt(int8 *r,const Fq *B,const int8 *T,const small *a)
 {
   Fq aB[p];
@@ -372,6 +416,15 @@ static void Decrypt(int8 *r,const Fq *B,const int8 *T,const small *a)
 #define Inputs_bytes (I/8)
 typedef int8 Inputs[I]; /* passed by reference */
 
+/*************************************************
+* Name:        Inputs_encode
+*
+* Description: Compress r into the bitstring s 
+*
+* Arguments:   
+* unsigned char *s : pointer to the output bitstring
+* const Inputs *r  : pointer to the input byte array in {0,1}^I
+**************************************************/
 static void Inputs_encode(unsigned char *s,const Inputs r)
 {
   int i;
@@ -379,14 +432,19 @@ static void Inputs_encode(unsigned char *s,const Inputs r)
   for (i = 0;i < I;++i) s[i>>3] |= r[i]<<(i&7);
 }
 
-#endif
 
-/* ----- Expand */
-
-#ifdef LPR
 
 static const unsigned char aes_nonce[16] = {0};
 
+/*************************************************
+* Name:        Expand
+*
+* Description: 
+*
+* Arguments:   
+* uint32 *L              : pointer to the output expanded array of random numbers
+* const unsigned char *k : pointer to the input bitstring which is used as seed
+**************************************************/
 static void Expand(uint32 *L,const unsigned char *k)
 {
   aes256ctx ctx;
@@ -394,26 +452,31 @@ static void Expand(uint32 *L,const unsigned char *k)
   aes256_ctr((unsigned char *) L, 4*p, aes_nonce, &ctx);
 }
 
-#endif
-
-/* ----- Seeds */
-
-#ifdef LPR
 
 #define Seeds_bytes 32
-
+/*************************************************
+* Name:        Seeds_random
+*
+* Description: Generates Seeds_bytes random bytes in s
+*
+* Arguments:   
+* unsigned char *s: pointer to the output serialized public key
+**************************************************/
 static void Seeds_random(unsigned char *s)
 {
   randombytes(s,Seeds_bytes);
 }
 
-#endif
 
-/* ----- Generator, HashShort */
-
-#ifdef LPR
-
-/* G = Generator(k) */
+/*************************************************
+* Name:        Generator
+*
+* Description: Generate random polynomial G in R_q from the seed k
+*
+* Arguments:   
+* Fq *G                 : pointer to the output public-key polynomial
+* const unsigned char *k: pointer to the input seed
+**************************************************/
 static void Generator(Fq *G,const unsigned char *k)
 {
   uint32 L[p];
@@ -435,7 +498,15 @@ static void Generator(Fq *G,const unsigned char *k)
   }
 }
 
-/* out = HashShort(r) */
+/*************************************************
+* Name:        HashShort
+*
+* Description: Generate random polynomial out with coefficients in {-1,0,1} from input r
+*
+* Arguments:   
+* small *out      : pointer to the output polynomial with coefficients in {-1,0,1}
+* const Inputs *r : pointer to the input byte array of input bits
+**************************************************/
 static void HashShort(small *out,const Inputs r)
 {
   unsigned char s[Inputs_bytes];
@@ -448,13 +519,17 @@ static void HashShort(small *out,const Inputs r)
   Short_fromlist(out,L);
 }
 
-#endif
 
-/* ----- NTRU LPRime Expand */
-
-#ifdef LPR
-
-/* (S,A),a = XKeyGen() */
+/*************************************************
+* Name:        XKeyGen
+*
+* Description: Generates S and G then calls KeyGen
+*
+* Arguments:   
+* unsigned char *S : pointer to the output byte array, seed for generating G
+* Fq *A            : pointer to the output polynomial A for public-key
+* small *a         : pointer to the output polynomial a for secret-key
+**************************************************/
 static void XKeyGen(unsigned char *S,Fq *A,small *a)
 {
   Fq G[p];
@@ -464,7 +539,18 @@ static void XKeyGen(unsigned char *S,Fq *A,small *a)
   KeyGen(A,a,G);
 }
 
-/* B,T = XEncrypt(r,(S,A)) */
+/*************************************************
+* Name:        XEncrypt
+*
+* Description: Generates G and b then calls Encrypt
+*
+* Arguments:   
+* Fq *B                  : pointer to the output polynomial as a part of ciphertext
+* int8 *T                : pointer to the output top bits of message encoded polynomial
+* const int8 *r          : pointer to the input serialized public key
+* const unsigned char *S : pointer to the input byte array, seed for generating G
+* const Fq *A            : pointer to the input polynomial
+**************************************************/
 static void XEncrypt(Fq *B,int8 *T,const int8 *r,const unsigned char *S,const Fq *A)
 {
   Fq G[p];
@@ -479,29 +565,26 @@ static void XEncrypt(Fq *B,int8 *T,const int8 *r,const unsigned char *S,const Fq
 
 #endif
 
-/* ----- encoding small polynomials (including short polynomials) */
 
 #define Small_bytes ((p+3)/4)
 
 /* these are the only functions that rely on p mod 4 = 1 */
 
+/*************************************************
+* Name:        Small_encode
+*
+* Description: Serialization of small polynomial into byte array
+*
+* Arguments:   
+* unsigned char *s : pointer to the output byte array
+* const small *f   : pointer to the input small polynomial
+**************************************************/
 static void Small_encode(unsigned char *s,const small *f)
 {
   small x;
   int i;
 
 
-#if 0
-  for (i = 0;i < p/4;++i) {
-    x = *f++ + 1;
-    x += (*f++ + 1)<<2;
-    x += (*f++ + 1)<<4;
-    x += (*f++ + 1)<<6;
-    *s++ = x;
-  }
-  x = *f++ + 1;
-  *s++ = x;
-#else
   int xx = 0x01010101;
   int x0, x1, x2, x3, y;
   int *ff = (int *)(void *)f;
@@ -544,26 +627,22 @@ static void Small_encode(unsigned char *s,const small *f)
   f = (small *)(void *)ff;
   x = *f++ + 1;
   *s++ = x;
-#endif
 }
 
+/*************************************************
+* Name:        Small_decode
+*
+* Description: De-serialization of small polynomial from byte array
+*
+* Arguments:   
+* small *f               : pointer to the output small polynomial
+* const unsigned char *s : pointer to the input serialized small polynomial
+**************************************************/
 static void Small_decode(small *f,const unsigned char *s)
 {
   unsigned char x;
   int i;
 
-#if 0
-  for (i = 0;i < p/4;++i) {
-    x = *s++;
-    *f++ = ((small)(x&3))-1; x >>= 2;
-    *f++ = ((small)(x&3))-1; x >>= 2;
-    *f++ = ((small)(x&3))-1; x >>= 2;
-    *f++ = ((small)(x&3))-1;
-  }
-  x = *s++;
-  *f++ = ((small)(x&3))-1;
-
-#else
   int xx = 0x01010101;
   int xxx = 0x03030303;
   int xoxo = 0xff00ff00;
@@ -599,18 +678,34 @@ static void Small_decode(small *f,const unsigned char *s)
   }
   x = *s++;
   *f++ = ((small)(x&3))-1;
-#endif
 }
 
-/* ----- encoding general polynomials */
 
 #ifndef LPR
 
+/*************************************************
+* Name:        Rq_encode
+*
+* Description: Serialization of a polynomial 
+*
+* Arguments:   
+* unsigned char *s : pointer to the output serialized polynomial
+* const Fq *r      : pointer to the input polynomial
+**************************************************/
 static void Rq_encode(unsigned char *s,const Fq *r)
 {
   Encode_Rq(s, (int16 *)r);
 }
 
+/*************************************************
+* Name:        Rq_decode
+*
+* Description: De-serialization of a polynomial
+*
+* Arguments:   
+* Fq *r                  : pointer to the output polynomial
+* const unsigned char *s : pointer to the input serialized polynomial
+**************************************************/
 static void Rq_decode(Fq *r,const unsigned char *s)
 {
   Decode_Rq((int16 *)r, s);
@@ -618,13 +713,29 @@ static void Rq_decode(Fq *r,const unsigned char *s)
 
 #endif
 
-/* ----- encoding rounded polynomials */
-
+/*************************************************
+* Name:        Rounded_encode
+*
+* Description: Compression and subsequent serialization of a polynomial 
+*
+* Arguments:   
+* unsigned char *s : pointer to the output serialized polynomial
+* const Fq *r      : pointer to the input  polynomial
+**************************************************/
 static void Rounded_encode(unsigned char *s,const Fq *r)
 {
   Encode_Rounded(s, (int16 *)r);
 }
 
+/*************************************************
+* Name:        Rounded_decode
+*
+* Description: De-serialization and subsequent uncompression of a polynomial 
+*
+* Arguments:   
+* int16 *R              : pointer to the output polynomial
+* const unsigned char *s: pointer to the input serialized polynomial
+**************************************************/
 static void Rounded_decode(Fq *r,const unsigned char *s)
 {
   Decode_Rounded((int16 *)r, s);
@@ -635,7 +746,15 @@ static void Rounded_decode(Fq *r,const unsigned char *s)
 #ifdef LPR
 
 #define Top_bytes (I/2)
-
+/*************************************************
+* Name:        Top_encode
+*
+* Description: Serialization of top polynomial
+*
+* Arguments:   
+* unsigned char *s : pointer to the output serialized top polynomial
+* const int8 *T    : pointer to the input top polynomial
+**************************************************/
 static void Top_encode(unsigned char *s,const int8 *T)
 {
   int i;
@@ -643,6 +762,15 @@ static void Top_encode(unsigned char *s,const int8 *T)
     s[i] = T[2*i]+(T[2*i+1]<<4);
 }
 
+/*************************************************
+* Name:        Top_decode
+*
+* Description: De-serialization of top polynomial
+*
+* Arguments:   
+* int8 *T                : pointer to the output top polynomial
+* const unsigned char *s : pointer to the input serialized top polynomial
+**************************************************/
 static void Top_decode(int8 *T,const unsigned char *s)
 {
   int i;
@@ -667,7 +795,15 @@ typedef small Inputs[p]; /* passed by reference */
 #define SecretKeys_bytes (2*Small_bytes)
 #define PublicKeys_bytes Rq_bytes
 
-/* pk,sk = ZKeyGen() */
+/*************************************************
+* Name:        ZKeyGen
+*
+* Description: Calls keygen for Streamlined NTRU Prime and encode the keys
+*
+* Arguments:   
+* unsigned char *pk : pointer to the output public-key
+* unsigned char *sk : pointer to the output secret-key
+**************************************************/
 static void ZKeyGen(unsigned char *pk,unsigned char *sk)
 {
   Fq h[p];
@@ -679,7 +815,16 @@ static void ZKeyGen(unsigned char *pk,unsigned char *sk)
   Small_encode(sk,v);
 }
 
-/* C = ZEncrypt(r,pk) */
+/*************************************************
+* Name:        ZEncrypt
+*
+* Description: Decode public-key, call Envrypt and then encode ciphertext
+*
+* Arguments:   
+* unsigned char *C        : pointer to the output ciphertext
+* const Inputs r          : pointer to the input plaintext
+* const unsigned char *pk : pointer to the input public-key
+**************************************************/
 static void ZEncrypt(unsigned char *C,const Inputs r,const unsigned char *pk)
 {
   Fq h[p];
@@ -689,7 +834,17 @@ static void ZEncrypt(unsigned char *C,const Inputs r,const unsigned char *pk)
   Rounded_encode(C,c);
 }
 
-/* r = ZDecrypt(C,sk) */
+
+/*************************************************
+* Name:        ZDecrypt
+*
+* Description: Decode secret-key and ciphertext then call Decrypt 
+*
+* Arguments:   
+* Inputs r                : pointer to the output plaintext
+* const unsigned char *C  : pointer to the input ciphertext
+* const unsigned char *sk : pointer to the input secret-key
+**************************************************/
 static void ZDecrypt(Inputs r,const unsigned char *C,const unsigned char *sk)
 {
   small f[p],v[p];
@@ -711,6 +866,14 @@ static void ZDecrypt(Inputs r,const unsigned char *C,const unsigned char *sk)
 #define SecretKeys_bytes Small_bytes
 #define PublicKeys_bytes (Seeds_bytes+Rounded_bytes)
 
+/*************************************************
+* Name:        Inputs_random
+*
+* Description: Random plaintext bits as elements of byte arrays
+*
+* Arguments:   
+* Inputs r : pointer to the output plaintext
+**************************************************/
 static void Inputs_random(Inputs r)
 {
   unsigned char s[Inputs_bytes];
@@ -720,7 +883,15 @@ static void Inputs_random(Inputs r)
   for (i = 0;i < I;++i) r[i] = 1&(s[i>>3]>>(i&7));
 }
 
-/* pk,sk = ZKeyGen() */
+/*************************************************
+* Name:        Zkeygen
+*
+* Description: Call XKeygen then encode public-key and secret-key
+*
+* Arguments:   
+* unsigned char *pk : pointer to the output public-key 
+* unsigned char *sk : pointer to the ioutput secret-key
+**************************************************/
 static void ZKeyGen(unsigned char *pk,unsigned char *sk)
 {
   Fq A[p];
@@ -731,7 +902,16 @@ static void ZKeyGen(unsigned char *pk,unsigned char *sk)
   Small_encode(sk,a);
 }
 
-/* c = ZEncrypt(r,pk) */
+/*************************************************
+* Name:        ZEncrypt
+*
+* Description: Decode public-key, call XEncrypt and then encode ciphertext
+*
+* Arguments:   
+* unsigned char *c        : pointer to the output ciphertext
+* const Inputs r          : pointer to the input plaintext
+* const unsigned char *pk : pointer to the input public-key
+**************************************************/
 static void ZEncrypt(unsigned char *c,const Inputs r,const unsigned char *pk)
 {
   Fq A[p];
@@ -744,7 +924,16 @@ static void ZEncrypt(unsigned char *c,const Inputs r,const unsigned char *pk)
   Top_encode(c,T);
 }
 
-/* r = ZDecrypt(C,sk) */
+/*************************************************
+* Name:        ZDecrypt
+*
+* Description: Decode secret-key and ciphertext then call XDecrypt
+*
+* Arguments:   
+* Inputs r                : pointer to the output plaintext
+* const unsigned char *c  : pointer to the input ciphertext
+* const unsigned char *sk : pointer to the input secret-key
+**************************************************/
 static void ZDecrypt(Inputs r,const unsigned char *c,const unsigned char *sk)
 {
   small a[p];
@@ -763,7 +952,16 @@ static void ZDecrypt(Inputs r,const unsigned char *c,const unsigned char *sk)
 
 #define Confirm_bytes 32
 
-/* h = HashConfirm(r,pk,cache); cache is Hash4(pk) */
+/*************************************************
+* Name:        HashConfirm
+*
+* Description: Computes hash_2 of r||cache, where cache is hash_4 of public-key
+*
+* Arguments:   
+* unsigned char *h           : pointer to the output hash
+* const unsigned char *r     : pointer to the input byte array
+* const unsigned char *cache : pointer to the input hash of public-key
+**************************************************/
 static void HashConfirm(unsigned char *h,const unsigned char *r,/*const unsigned char *pk,*/const unsigned char *cache)
 {
 #ifndef LPR
@@ -785,6 +983,17 @@ static void HashConfirm(unsigned char *h,const unsigned char *r,/*const unsigned
 /* ----- session-key hash */
 
 /* k = HashSession(b,y,z) */
+/*************************************************
+* Name:        HashSession
+*
+* Description: Generate session key
+*
+* Arguments:   
+* unsigned char *k       : pointer to the output session key
+* int b                  : domain separetor
+* const unsigned char *y : pointer to the input plaintext
+* const unsigned char *z : pointer to the input ciphertext
+**************************************************/
 static void HashSession(unsigned char *k,int b,const unsigned char *y,const unsigned char *z)
 {
 #ifndef LPR
@@ -805,7 +1014,16 @@ static void HashSession(unsigned char *k,int b,const unsigned char *y,const unsi
 
 /* ----- Streamlined NTRU Prime and NTRU LPRime */
 
-/* pk,sk = KEM_KeyGen() */
+/*************************************************
+* Name:        KEM_KeyGen
+*
+* Description: Key generation function for both Streamlined NTRU Prime
+*              and NTRU LPRime
+*
+* Arguments:   
+* unsigned char *pk : pointer to the output public-key
+* unsigned char *sk : pointer to the output secret-key
+**************************************************/
 static void KEM_KeyGen(unsigned char *pk,unsigned char *sk)
 {
   int i;
@@ -816,7 +1034,20 @@ static void KEM_KeyGen(unsigned char *pk,unsigned char *sk)
   Hash(sk,4,pk,PublicKeys_bytes);
 }
 
-/* c,r_enc = Hide(r,pk,cache); cache is Hash4(pk) */
+/*************************************************
+* Name:        Hide
+*
+* Description: Helper function for Encapsulation and decapsulation functions. 
+*              It computes ciphertext and HashConfirm for a given plaintext 
+*              and public-key
+*
+* Arguments:   
+* unsigned char *c           : pointer to the output ciphertext
+* unsigned char *r_enc       : pointer to the output encoded plaintext
+* const Inputs r             : pointer to the input plaintext
+* const unsigned char *pk    : pointer to the input public-key
+* const unsigned char *cache : pointer to the input hash of public-key
+**************************************************/
 static void Hide(unsigned char *c,unsigned char *r_enc,const Inputs r,const unsigned char *pk,const unsigned char *cache)
 {
   Inputs_encode(r_enc,r);
@@ -824,7 +1055,17 @@ static void Hide(unsigned char *c,unsigned char *r_enc,const Inputs r,const unsi
   HashConfirm(c,r_enc,/*pk,*/cache);
 }
 
-/* c,k = Encap(pk) */
+/*************************************************
+* Name:        Encap
+*
+* Description: Encapsulation function for both Streamlined NTRU Prime
+*              and NTRU LPRime
+*
+* Arguments:   
+* unsigned char *c        : pointer to the output ciphertext
+* unsigned char *k        : pointer to the output session key
+* const unsigned char *pk : pointer to the input public-key
+**************************************************/
 static void Encap(unsigned char *c,unsigned char *k,const unsigned char *pk)
 {
   Inputs r;
@@ -838,15 +1079,20 @@ static void Encap(unsigned char *c,unsigned char *k,const unsigned char *pk)
 }
 
 /* 0 if matching ciphertext+confirm, else -1 */
+/*************************************************
+* Name:        Ciphertexts_diff_mask
+*
+* Description: Returns 0 if ciphertexts and Confirm bytes, -1 otherwise
+*
+* Arguments:   
+* const unsigned char *c  : pointer to the input first ciphertext
+* const unsigned char *c2 : pointer to the input second ciphertext
+**************************************************/
 static int Ciphertexts_diff_mask(const unsigned char *c,const unsigned char *c2)
 {
   uint16 differentbits = 0;
   int len = Ciphertexts_bytes+Confirm_bytes;
 
-#if 0
-  while (len-- > 0) differentbits |= (*c++)^(*c2++);
-  return (1&((differentbits-1)>>8))-1;
-#else
   int *cc = (int *)(void *)c;
   int *cc2 = (int *)(void *)c2;
   int differentbits2 = 0;
@@ -858,12 +1104,19 @@ static int Ciphertexts_diff_mask(const unsigned char *c,const unsigned char *c2)
   for (len &= 3; len > 0; len--)
     differentbits2 =__USADA8((*c++),(*c2++),differentbits2);
   return ((-1)-((differentbits-1)>>31));
-#endif
-
-
 }
 
-/* k = Decap(c,sk) */
+/*************************************************
+* Name:        Decap
+*
+* Description: Decapsulation function for both Streamlined NTRU Prime
+*              and NTRU LPRime
+*
+* Arguments:   
+* unsigned char *k        : pointer to the output session key
+* const unsigned char *c  : pointer to the input ciphertext
+* const unsigned char *sk : pointer to the input secret-key
+**************************************************/
 static void Decap(unsigned char *k,const unsigned char *c,const unsigned char *sk)
 {
   const unsigned char *pk = sk + SecretKeys_bytes;
@@ -885,6 +1138,7 @@ static void Decap(unsigned char *k,const unsigned char *c,const unsigned char *s
 /* ----- crypto_kem API */
 
 #include "api.h"
+
 
 int crypto_kem_keypair(unsigned char *pk,unsigned char *sk)
 {
