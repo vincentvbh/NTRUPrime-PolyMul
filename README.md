@@ -46,11 +46,11 @@ Testing binaries:
 - ntrulpr761\_mr\_test.bin: MIXED macro activated NTRU Prime scheme
 - sntrup761\_mr\_test.bin: MIXED macro activated Streamlined NTRU Prime scheme
 
-To load the binaries to the board and read the output, one can simply run the make runXXX, where XXX can be Speed, Stack, Test, or All for running all three of them. After running any .bin file the output is also recorded in .bin.log files in obj directory. A shell script called benchmark.sh provided to generate table 5 and table 6 in our paper in commandline interface.
+To load the binaries to the board and read the output, one can simply run the make runXXX, where XXX can be Speed, Stack, Test, or All for running all three of them. After running any .bin file the output is also recorded in .bin.log files in obj directory. A shell script called benchmark.sh provided to generate table 5 and table 6 in our paper in the command-line interface.
 
 ## Implementation details
 
-To use parts of the codes we provide brief description of the files here
+To use parts of the codes we provide a brief description of the files here
 - ./src/common is taken from the PQM4 library which includes
   - AES implementation
   - fips202 implementation of SHA3
