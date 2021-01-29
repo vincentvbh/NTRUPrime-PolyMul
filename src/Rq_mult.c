@@ -1,6 +1,17 @@
 #include "Rq_mult.h"
 
-/* h = f*g in the ring Rq */
+
+/*************************************************
+* Name:        Rq_mult_small
+*
+* Description: Computes polynomial multiplication in Z_q/(X^p-X-1) 
+*              with selected implementation. 
+*
+* Arguments:   
+* Fq *h          : pointer to the output polynomial in R_q
+* const Fq *f    : pointer to the input polynomial in R_q
+* const small *g : pointer to the input polynomial in R_q
+**************************************************/
 void Rq_mult_small(Fq *h,const Fq *f,const small *g)
 {
 #if defined(MIXED1)
@@ -42,6 +53,19 @@ void Rq_mult_small(Fq *h,const Fq *f,const small *g)
 #endif
 }
 
+/*************************************************
+* Name:        Rq_mult_twice
+*
+* Description: Computes two polynomial multiplications in Z_q/(X^p-X-1) 
+*              with selected implementation. 
+*
+* Arguments:   
+* Fq *bG          : pointer to the output polynomial in R_q
+* Fq *bA          : pointer to the output polynomial in R_q 
+* const Fq *G    : pointer to the input polynomial in R_q
+* const Fq *A    : pointer to the input polynomial in R_q
+* const small *b : pointer to the input polynomial in R_q
+**************************************************/
 void Rq_mult_twice(Fq *bG, Fq *bA, const Fq *G, const Fq *A, const small *b){
 #if defined(MIXED1)
   int16_t b_modq[1530], G_modq[1530], A_modq[1530];
