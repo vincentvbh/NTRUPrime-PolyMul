@@ -15,7 +15,7 @@ The implementation targets the STM32F4 Discovery board, and it uses the followin
 - arm-none-eabi toolchain for compiling the code (version 9.2.1 used for development).
 - STLINK to flash binaries to the board (version v1.5.1 used for development).
 - libopencm3 for main library functions.
-- A shell script is provided in test/monitor.sh to read the output of tests and benchmarks.
+- A bash script is provided in test/monitor.sh to read the output of tests and benchmarks.
 - Alternatively, read_guest.py from [PQM4](https://github.com/mupq/pqm4) can be used to read the output of tests and benchmarks. This script requires Python >= 3.6, and pyserial. 
 
 For convenience, libopencm3 is compiled, and relevant header files and the shared object placed in the lib directory.
