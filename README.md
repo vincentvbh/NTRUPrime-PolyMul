@@ -57,7 +57,7 @@ To use parts of the codes we provide a brief description of the files here
   - randombytes implementation to generate arbitrary length random byte arrays
   - hal-stm32f4.c which includes several wrapper functions for stm32 discovery boards.
 - ./src/intsort directory includes djbsort implementation integer arrays, more details about the algorithm can be found [here](https://sorting.cr.yp.to/).
-- ./src/polyinv directory includes GCD based polynomial inversion implementation from the [paper](https://doi.org/10.13154/tches.v2019.i3.340-398) by Daniel J. Bernstein and Bo-Yin Yang.
+- ./src/polyinv directory includes GCD based polynomial inversion implementation from the [paper](https://doi.org/10.13154/tches.v2019.i3.340-398) by Daniel J. Bernstein and Bo-Yin Yang and also polynomial multiplication implementation in Z_3/(X^{761}-X-1). These codes are used only in Streamlined NTRU Prime scheme.
 - Decode\_asm.S, Decode.c, Encode\_asm.S, and Encode.c are implementations of encoding and decoding functions for polynomials.
 - kem.c includes all high-level functions for implementing NTRU LPRime and Streamlined NTRU Prime key encapsulation schemes.
 - Rq_fromR3.S, Rq_mov.S, copy_p_F3_mod3.S, Short_fromlist_asm_ntrulpr761.S, and Short_fromlist_asm_sntrup761.S are implementations of functions needed for transforming polynomials 
