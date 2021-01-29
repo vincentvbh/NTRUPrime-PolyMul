@@ -16,7 +16,7 @@ The implementation targets the STM32F4 Discovery board, and it uses the followin
 - STLINK to flash binaries to the board (version v1.5.1 used for development).
 - libopencm3 for main library functions.
 - A shell script is provided in test/monitor.sh to read the output of tests and benchmarks.
-- Alternatively, read_guest.py from PQM4 can be used to read the output of tests and benchmarks. This script requires Python >= 3.6, and pyserial. 
+- Alternatively, read_guest.py from [PQM4](https://github.com/mupq/pqm4) can be used to read the output of tests and benchmarks. This script requires Python >= 3.6, and pyserial. 
 
 For convenience, libopencm3 is compiled, and relevant header files and the shared object placed in the lib directory.
 
@@ -51,7 +51,7 @@ To load the binaries to the board and read the output, one can simply run the ma
 ## Implementation details
 
 To use parts of the codes we provide a brief description of the files here
-- ./src/common is taken from the PQM4 library which includes
+- ./src/common is taken from the [PQM4](https://github.com/mupq/pqm4) library which includes
   - AES implementation
   - fips202 implementation of SHA3
   - randombytes implementation to generate arbitrary length random byte arrays

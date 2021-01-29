@@ -1,4 +1,4 @@
-The most of the c codes in the repository are taken from PQM4 which is released under CC0, the codes that have different licence (public domain or MIT) indicated in the top of the file if needed. The new codes are in 
+This package provides implementation of NTRU LPRime and Streamlined NTRU Prime schemes based on a previous implementation which is taken from the [PQM4](https://github.com/mupq/pqm4) library which is released under [CC0](https://creativecommons.org/publicdomain/zero/1.0/), the codes that have different licence (public domain or MIT) indicated in the top of the file if needed. The new codes are provided in 
 - Rqmul_1530_byteToShort.S,  
 - Rqmul_1530_radix17_rader.S, 
 - Rqmul_gs_basemul.S, 
