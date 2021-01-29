@@ -23,7 +23,7 @@
 /*************************************************
 * Name:        int16_negative_mask
 *
-* Description: Returns -1 if is input is negative integer, 0 otherwise.
+* Description: Return -1 if is input is a negative integer, 0 otherwise.
 *
 * Argument:   
 * int16 x : input coefficient
@@ -43,7 +43,7 @@ static int int16_negative_mask(int16 x)
 /*************************************************
 * Name:        Top
 *
-* Description: Rounds ((tau_1 * (C+tau_0)) div 2^15) to the closer integer.
+* Description: Round ((tau_1 * (C+tau_0)) div 2^15) to the closer integer and return.
 *
 * Arguments:   
 * Fq C     : input coefficient
@@ -57,7 +57,7 @@ static int8 Top(Fq C)
 /*************************************************
 * Name:        Right
 *
-* Description: Computes (tau_3*T-tau_3) mod q.
+* Description: Compute (tau_3*T-tau_3) mod q.
 *
 * Arguments:   
 * int8 T   : input coefficient
@@ -75,7 +75,7 @@ static Fq Right(int8 T)
 /*************************************************
 * Name:        R3_mult
 *
-* Description: Computes polynomial multiplication in Z_3/(X^p-X-1) 
+* Description: Compute polynomial multiplication in Z_3/(X^p-X-1) 
 *              with Toom-Cook based implementation. 
 *
 * Arguments:   
@@ -98,7 +98,7 @@ static void R3_mult(small *h,const small *f,const small *g)
 /*************************************************
 * Name:        R3_fromRq
 *
-* Description: Returns a polynomial that i-th coefficient
+* Description: Return a polynomial that i-th coefficient
 *              computed as (r[i] mod q) mod 3.
 *
 * Arguments:   
@@ -115,7 +115,7 @@ static void R3_fromRq(small *out,const Fq *r)
 /*************************************************
 * Name:        Rq_mult3
 *
-* Description: Computes h = 3*f mod R_q.
+* Description: Compute h = 3*f mod R_q.
 *
 * Arguments:   
 * Fq *h       : pointer to the output polynomial in R_q
@@ -201,7 +201,7 @@ static void Hash(unsigned char *out,int b,const unsigned char *in,int inlen)
 * Name:        Short_random
 *
 * Description: Generate random sparse polynomial with coefficients are in {-1,0,1} 
-*              and weight is w. It generates unsigned 32-bit integer array, uses the 
+*              and weight is w. It generates an unsigned 32-bit integer array, uses the 
 *              least significant two bits to indicate {-1,0,1}, then uses djbsort 
 *              to shuffle the array and maps values to {-1,0,1}.
 *
