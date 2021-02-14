@@ -3,6 +3,7 @@ DIR=obj/
 out=benchmarks.log
 echo -e "\t\t    Table 5\t\t" |tee $out
 echo -e "\t Good's Trick\t   Mixed Radix1\t   Mixed Radix2" |tee -a $out
+echo -e "\t   N = 1536  \t     N = 1530  \t     N = 1620" |tee -a $out
 
 for i in ntrulpr761  
 do
@@ -28,6 +29,7 @@ do
 done | tee -a $out
 echo -e "\n\n\t\t    Table 6\t\t" |tee -a $out
 echo -e "   Good's Trick\t  Mixed Radix1 \t  Mixed Radix2" |tee -a $out
+echo -e "     N = 1536  \t    N = 1530   \t    N = 1620" |tee -a $out
 
 for i in ntrulpr761  
 do
