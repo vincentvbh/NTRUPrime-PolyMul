@@ -6,7 +6,7 @@
 #if defined(MIXED)
 #define STACK_q 4591
 #define STACK_n 1620
-#elif defined(MIXED1)
+#elif defined(RADER)
 #define STACK_q 4591
 #define STACK_n 1530
 #elif defined(GOODS)
@@ -67,7 +67,7 @@ static int test_keys(void) {
   CHECK_STACK()
   if(c >= canary_size) return -1;
   stack_decaps = c;
-  
+
   if (memcmp(key_a, key_b, CRYPTO_BYTES)){
     return -1;
   } else {
@@ -86,11 +86,11 @@ int main(void) {
   // marker for automated benchmarks
   hal_send_str("==========================");
   char out[64];
-  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE); 
+  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE);
   hal_send_str(out);
-  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",STACK_q,STACK_n); 
+  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",STACK_q,STACK_n);
   hal_send_str(out);
-  
+
   canary_size = 0x1000;
   while(test_keys()){
     canary_size += 0x100;

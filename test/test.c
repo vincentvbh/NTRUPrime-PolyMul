@@ -7,7 +7,7 @@
 #if defined(MIXED)
 #define TEST_q 4591
 #define TEST_n 1620
-#elif defined(MIXED1)
+#elif defined(RADER)
 #define TEST_q 4591
 #define TEST_n 1530
 #elif defined(GOODS)
@@ -165,9 +165,9 @@ int main(void)
   hal_send_str("==========================");
   int ret0,ret1,ret2;
   char out[64];
-  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE); 
+  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE);
   hal_send_str(out);
-  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",TEST_q,TEST_n); 
+  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",TEST_q,TEST_n);
   hal_send_str(out);
 
 
@@ -182,7 +182,7 @@ int main(void)
   ret1 = test_invalid_sk_a();
   if (ret1)
     hal_send_str("ERROR invalid sk_a\n");
-  
+
   ret2 = test_invalid_ciphertext();
   if (ret2)
     hal_send_str("ERROR invalid ciphertext\n");
