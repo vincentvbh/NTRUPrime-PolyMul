@@ -90,10 +90,10 @@ int main(void)
 
   t0 = hal_get_time();
 #if defined(RADER)
-  byteToShort(g, g_modq);
-  ntt17_rader(g, g_modq);
-  fft9(g_modq);
-  ntt17_rader(g, f_modq);
+  byteToShort(g_modq, (const int8_t*)g);
+  ntt17_rader((const int16_t*)g_modq, f_modq);
+  fft9(f_modq);
+  ntt17_rader((const int16_t*)g_modq, f_modq);
   fft9(f_modq);
   polymul_10x10_153_mr(f_modq, g_modq);
   ifft9(f_modq);
