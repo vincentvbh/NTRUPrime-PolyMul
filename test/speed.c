@@ -8,7 +8,7 @@
 #if defined(MIXED)
 #define SPEED_q 4591
 #define SPEED_n 1620
-#elif defined(MIXED1)
+#elif defined(RADER)
 #define SPEED_q 4591
 #define SPEED_n 1530
 #elif defined(GOODS)
@@ -30,7 +30,7 @@ int main(void)
   unsigned char pk[CRYPTO_PUBLICKEYBYTES];
   unsigned char ct[CRYPTO_CIPHERTEXTBYTES];
   unsigned long long t0, t1;
-#if defined(MIXED1)
+#if defined(RADER)
   Fq f_modq[PARAMS_M], g_modq[PARAMS_M];
   small g[761];
   for(int i=0; i<761; i++){
@@ -89,7 +89,7 @@ int main(void)
 
 
   t0 = hal_get_time();
-#if defined(MIXED1)
+#if defined(RADER)
   byteToShort(g, g_modq);
   ntt17_rader(g, g_modq);
   fft9(g_modq);
@@ -124,7 +124,7 @@ int main(void)
   printcycles("Poly mul cycles: ", t1-t0);
 
   t0 = hal_get_time();
-#if defined(MIXED1)
+#if defined(RADER)
     ntt17_rader(g, f_modq);
   fft9(f_modq);
 #elif defined(MIXED)
@@ -135,7 +135,7 @@ int main(void)
   t1 = hal_get_time();
   printcycles("NTT cycles: ", t1-t0);
   t0 = hal_get_time();
-#if defined(MIXED1)
+#if defined(RADER)
     byteToShort(g, g_modq);
   ntt17_rader(g, g_modq);
   fft9(g_modq);
@@ -147,7 +147,7 @@ int main(void)
   t1 = hal_get_time();
   printcycles("NTT1s cycles: ", t1-t0);
   t0 = hal_get_time();
-#if defined(MIXED1)
+#if defined(RADER)
   polymul_10x10_153_mr(f_modq, g_modq);
 #elif defined(MIXED)
   asm_basemul(f_modq, g_modq, bromegas_asm);
@@ -157,7 +157,7 @@ int main(void)
   t1 = hal_get_time();
   printcycles("Base mul cycles: ", t1-t0);
   t0 = hal_get_time();
-#if defined(MIXED1)
+#if defined(RADER)
    ifft9(f_modq);
   intt17_rader_mr(f_modq, g_modq);
   mod_reduce(f_modq, g_modq);

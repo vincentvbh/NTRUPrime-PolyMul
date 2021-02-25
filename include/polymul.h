@@ -21,7 +21,7 @@ extern void reduce_2p_minus1_mod3_F3(int8 *h, int8 *fg);
 extern void Short_fromlist_asm(int8 *out,const uint32 *in);
 
 
-#if defined(MIXED1)
+#if defined(RADER)
 #define PARAMS_M 1530
 void fft17(int16*f, int16* fpad);
 void ntt17_rader(int16* f, int16* fpad);
