@@ -54,9 +54,8 @@ body:
     str.w r8, [r0], #40
     cmp.w r1, r2
     bne.w body
-    ldr.w r3, [r1]
-    sbfx r3, r3, #0, #8
-    mov.w r4, #0
-    pkhbt r3, r3, r4
+
+    ldrsb.w r3, [r1]
     strh.w r3, [r0]
+
     pop {r2-r12, pc}
