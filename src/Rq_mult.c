@@ -4,10 +4,10 @@
 /*************************************************
 * Name:        Rq_mult_small
 *
-* Description: Computes polynomial multiplication in Z_q/(X^p-X-1) 
-*              with selected implementation. 
+* Description: Computes polynomial multiplication in Z_q/(X^p-X-1)
+*              with selected implementation.
 *
-* Arguments:   
+* Arguments:
 * Fq *h          : pointer to the output polynomial in R_q
 * const Fq *f    : pointer to the input polynomial in R_q
 * const small *g : pointer to the input polynomial in R_q
@@ -31,12 +31,12 @@ void Rq_mult_small(Fq *h,const Fq *f,const small *g)
 
   asm_ntt1s(g_modq,g,omegas_asm);
   asm_ntt(fg,f,omegas_asm);
-  
+
   asm_basemul(fg,g_modq,bromegas_asm);
   asm_invntt(h,fg,invomegas_asm);
 
 #elif defined(GOODS)
-  int Goodp0[3][N], Goodp1[3][N];
+  int32_t Goodp0[3][N], Goodp1[3][N];
 
   NTT_forward_8(g, root_table, MOD, Mprime, &(Goodp0[0][0]));
   NTT_forward_16(f, root_table, MOD, Mprime, &(Goodp1[0][0]));
@@ -47,7 +47,7 @@ void Rq_mult_small(Fq *h,const Fq *f,const small *g)
   __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), inv_factor_4_5_6, Mprime, MOD);
   __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
-  __asm_final_map_and_pack(h, R2invN, Goodp0[2], 
+  __asm_final_map_and_pack(h, R2invN, Goodp0[2],
                            Goodp0[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
 #endif
@@ -56,12 +56,12 @@ void Rq_mult_small(Fq *h,const Fq *f,const small *g)
 /*************************************************
 * Name:        Rq_mult_twice
 *
-* Description: Computes two polynomial multiplications in Z_q/(X^p-X-1) 
-*              with selected implementation. 
+* Description: Computes two polynomial multiplications in Z_q/(X^p-X-1)
+*              with selected implementation.
 *
-* Arguments:   
+* Arguments:
 * Fq *bG          : pointer to the output polynomial in R_q
-* Fq *bA          : pointer to the output polynomial in R_q 
+* Fq *bA          : pointer to the output polynomial in R_q
 * const Fq *G    : pointer to the input polynomial in R_q
 * const Fq *A    : pointer to the input polynomial in R_q
 * const small *b : pointer to the input polynomial in R_q
@@ -87,7 +87,7 @@ void Rq_mult_twice(Fq *bG, Fq *bA, const Fq *G, const Fq *A, const small *b){
 
 #elif defined(MIXED)
   Fq b_modq[PARAMS_M],G_modq[PARAMS_M],A_modq[PARAMS_M];
-  
+
   asm_ntt1s(b_modq,b,omegas_asm);
   asm_ntt(G_modq,G,omegas_asm);
   asm_ntt(A_modq,A,omegas_asm);
@@ -99,7 +99,7 @@ void Rq_mult_twice(Fq *bG, Fq *bA, const Fq *G, const Fq *A, const small *b){
 #elif defined(GOODS)
   // reuse NTT'd small part
 
-  int Goodp0[3][N], Goodp1[3][N], Goodp2[3][N];
+  int32_t Goodp0[3][N], Goodp1[3][N], Goodp2[3][N];
 
   NTT_forward_8(b, root_table, MOD, Mprime, &(Goodp0[0][0]));
   NTT_forward_16(G, root_table, MOD, Mprime, &(Goodp1[0][0]));
@@ -116,10 +116,10 @@ void Rq_mult_twice(Fq *bG, Fq *bA, const Fq *G, const Fq *A, const small *b){
   __asm_NTT_inv_4_5_6(&(Goodp2[0][0]), inv_factor_4_5_6, Mprime, MOD);
   __asm_NTT_inv_7_8_9(&(Goodp2[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
-  __asm_final_map_and_pack(bG, R2invN, Goodp1[2], 
+  __asm_final_map_and_pack(bG, R2invN, Goodp1[2],
                            Goodp1[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
-  __asm_final_map_and_pack(bA, R2invN, Goodp2[2], 
+  __asm_final_map_and_pack(bA, R2invN, Goodp2[2],
                            Goodp2[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
 #endif
