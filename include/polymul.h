@@ -23,8 +23,10 @@ extern void Short_fromlist_asm(int8 *out,const uint32 *in);
 
 #if defined(MIXED1)
 #define PARAMS_M 1530
-void byteToShort(int16* gg, const int8* g);
-void ntt17_rader(const int16* f, int16* fpad);
+void fft17(int16*f, int16* fpad);
+void ntt17_rader(int16* f, int16* fpad);
+void ntt17_rader_byte(int8* g, int16* gpad);
+void byteToShort(int16* gg, int8* g);
 void fft9(int16* fpad);
 void polymul_10x10_153_mr(int16* fpad, int16* gpad);
 void ifft9(int16* fpad);

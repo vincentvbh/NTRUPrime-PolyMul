@@ -50,7 +50,7 @@ int main(void)
   }
 
 #elif defined(GOODS)
-  int32_t Goodp0[3][N], Goodp1[3][N];
+  int Goodp0[3][N], Goodp1[3][N];
 
   Fq f[761],h[761];
   small g[761];
@@ -65,9 +65,9 @@ int main(void)
 
   hal_send_str("==========================");
   char out[64];
-  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE);
+  snprintf(out,64,"Scheme: %s\n",crypto_kem_PRIMITIVE); 
   hal_send_str(out);
-  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",SPEED_q,SPEED_n);
+  snprintf(out,64,"NTT ring: Z_{%d}/(X^{%d}-1)\n",SPEED_q,SPEED_n); 
   hal_send_str(out);
   // Key-pair generation
   t0 = hal_get_time();
@@ -116,7 +116,7 @@ int main(void)
   __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), inv_factor_4_5_6, Mprime, MOD);
   __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
-  __asm_final_map_and_pack(h, R2invN, Goodp0[2],
+  __asm_final_map_and_pack(h, R2invN, Goodp0[2], 
                            Goodp0[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
 #endif
@@ -147,9 +147,9 @@ int main(void)
   t1 = hal_get_time();
   printcycles("NTT1s cycles: ", t1-t0);
   t0 = hal_get_time();
-#if defined(MIXED1)
+#if defined(MIXED1)  
   polymul_10x10_153_mr(f_modq, g_modq);
-#elif defined(MIXED)
+#elif defined(MIXED)  
   asm_basemul(f_modq, g_modq, bromegas_asm);
 #elif defined(GOODS)
   __asm_my_mul(&(Goodp0[1][0]), &(Goodp1[1][0]), Mprime, MOD);
@@ -168,7 +168,7 @@ int main(void)
   __asm_NTT_inv_4_5_6(&(Goodp0[0][0]), inv_factor_4_5_6, Mprime, MOD);
   __asm_NTT_inv_7_8_9(&(Goodp0[0][0]), inv_factor_7_8_9, Mprime, MOD);
 
-  __asm_final_map_and_pack(h, R2invN, Goodp0[2],
+  __asm_final_map_and_pack(h, R2invN, Goodp0[2], 
                            Goodp0[0], O_M, O_M_bar, Mhalf,
                            Mprime, MOD);
 #endif
