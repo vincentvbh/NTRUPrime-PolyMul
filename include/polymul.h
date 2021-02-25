@@ -28,6 +28,7 @@ void ntt17_rader(const int16* f, int16* fpad);
 void fft9(int16* fpad);
 void polymul_10x10_153_mr(int16* fpad, int16* gpad);
 void ifft9(int16* fpad);
+void ifft17_mr(int16* fpad, int16* h);
 void intt17_rader_mr(int16* fpad, int16* h);
 void mod_reduce(int16* h, int16* hpad);
 #elif defined(MIXED)

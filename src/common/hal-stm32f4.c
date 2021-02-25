@@ -114,7 +114,7 @@ void printbytes(unsigned char* v, unsigned int len){
 	char out;
 	unsigned int i;
 	for(i=0; i < len; ++i){
-    out = v[i];
+		sprintf(&out, "%X", v[i]);
 		hal_send_rstr(&out);
 	}
 	hal_send_str("\n");
