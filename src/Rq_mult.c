@@ -14,7 +14,7 @@
 **************************************************/
 void Rq_mult_small(Fq *h,const Fq *f,const small *g)
 {
-#if defined(RADER)
+#if defined(MIXED1)
   int16_t g_modq[1530], fg[1530];
 
   byteToShort(h, g);
@@ -71,7 +71,7 @@ void Rq_mult_small(Fq *h,const Fq *f,const small *g)
 * const small *b : pointer to the input polynomial in R_q
 **************************************************/
 void Rq_mult_twice(Fq *bG, Fq *bA, const Fq *G, const Fq *A, const small *b){
-#if defined(RADER)
+#if defined(MIXED1)
   int16_t b_modq[1530], G_modq[1530], A_modq[1530];
 
   byteToShort(bG, b);
