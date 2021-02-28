@@ -99,6 +99,14 @@
 #define DMA2D_IRQHandler dma2d_isr
 #define SAI2_IRQHandler sai2_isr
 #define QUADSPI_IRQHandler quadspi_isr
+#define LP_TIMER1_IRQHandler lp_timer1_isr
+#define HDMI_CEC_IRQHandler hdmi_cec_isr
 #define I2C4_EV_IRQHandler i2c4_ev_isr
 #define I2C4_ER_IRQHandler i2c4_er_isr
 #define SPDIFRX_IRQHandler spdifrx_isr
+#define DSIHOST_IRQHandler dsihost_isr
+#define DFSDM1_FLT0_IRQHandler dfsdm1_flt0_isr
+#define DFSDM1_FLT1_IRQHandler dfsdm1_flt1_isr
+#define DFSDM1_FLT2_IRQHandler dfsdm1_flt2_isr
+#define DFSDM1_FLT3_IRQHandler dfsdm1_flt3_isr
+#define SDMMC2_IRQHandler sdmmc2_isr

@@ -1,7 +1,6 @@
-#ifndef LIBOPENCM3_FLASH_H
-#define LIBOPENCM3_FLASH_H
-
-/** @addtogroup flash_defines
+/** @defgroup flash_defines FLASH Defines
+ *
+ * @ingroup STM32F7xx_defines
  *
  * @author @htmlonly &copy; @endhtmlonly 2017
  * Matthew Lai <m@matthewlai.ca>
@@ -32,6 +31,9 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LIBOPENCM3_FLASH_H
+#define LIBOPENCM3_FLASH_H
+
 #include <libopencm3/stm32/common/flash_common_all.h>
 #include <libopencm3/stm32/common/flash_common_f.h>
 #include <libopencm3/stm32/common/flash_common_f24.h>
@@ -51,7 +53,7 @@
 
 /* --- FLASH_ACR values ---------------------------------------------------- */
 
-/** @addtogroup flash_acr_values FLASH_ACR_VALUES
+/** @addtogroup flash_acr_values FLASH_ACR values
  * @ingroup flash_registers
 @{*/
 #define FLASH_ACR_ARTRST		(1 << 11)

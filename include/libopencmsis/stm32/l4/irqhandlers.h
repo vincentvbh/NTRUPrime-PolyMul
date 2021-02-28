@@ -88,3 +88,12 @@
 #define AES_IRQHandler aes_isr
 #define RNG_IRQHandler rng_isr
 #define FPU_IRQHandler fpu_isr
+#define HASH_CRS_IRQHandler hash_crs_isr
+#define I2C4_EV_IRQHandler i2c4_ev_isr
+#define I2C4_ER_IRQHandler i2c4_er_isr
+#define DCMI_IRQHandler dcmi_isr
+#define CAN2_TX_IRQHandler can2_tx_isr
+#define CAN2_RX0_IRQHandler can2_rx0_isr
+#define CAN2_RX1_IRQHandler can2_rx1_isr
+#define CAN2_SCE_IRQHandler can2_sce_isr
+#define DMA2D_IRQHandler dma2d_isr

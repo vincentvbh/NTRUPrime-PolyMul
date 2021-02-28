@@ -16,8 +16,8 @@
 #define EXTI4_15_IRQHandler exti4_15_isr
 #define TSC_IRQHandler tsc_isr
 #define DMA1_CHANNEL1_IRQHandler dma1_channel1_isr
-#define DMA1_CHANNEL2_3_IRQHandler dma1_channel2_3_isr
-#define DMA1_CHANNEL4_5_IRQHandler dma1_channel4_5_isr
+#define DMA1_CHANNEL2_3_DMA2_CHANNEL1_2_IRQHandler dma1_channel2_3_dma2_channel1_2_isr
+#define DMA1_CHANNEL4_7_DMA2_CHANNEL3_5_IRQHandler dma1_channel4_7_dma2_channel3_5_isr
 #define ADC_COMP_IRQHandler adc_comp_isr
 #define TIM1_BRK_UP_TRG_COM_IRQHandler tim1_brk_up_trg_com_isr
 #define TIM1_CC_IRQHandler tim1_cc_isr
